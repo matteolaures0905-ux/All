@@ -4,7 +4,7 @@
   "end": 1.95,
   "scene": "street",
   "text": "",
-  "action": "walk_away"
+  "action": "bored"
  },
  {
   "start": 2.0,
@@ -16,14 +16,14 @@
  {
   "start": 4.0,
   "end": 5.95,
-  "scene": "wall",
+  "scene": "alley",
   "text": "",
   "action": "press"
  },
  {
   "start": 6.0,
   "end": 7.95,
-  "scene": "wall",
+  "scene": "alley",
   "text": "",
   "action": "shrug"
  },
@@ -39,14 +39,14 @@
   "end": 11.35,
   "scene": "park",
   "text": "",
-  "action": "with_them"
+  "action": "friend_with"
  },
  {
   "start": 11.4,
   "end": 12.45,
   "scene": "room",
   "text": "",
-  "action": "with_them"
+  "action": "me_with"
  },
  {
   "start": 12.5,
@@ -67,12 +67,12 @@
   "end": 18.45,
   "scene": "street",
   "text": "",
-  "action": "rumors"
+  "action": "rumors_cover"
  },
  {
   "start": 18.5,
   "end": 19.95,
-  "scene": "wall",
+  "scene": "alley",
   "text": "",
   "action": "target"
  },
@@ -88,7 +88,7 @@
   "end": 23.95,
   "scene": "roof",
   "text": "",
-  "action": "time_flies"
+  "action": "time"
  },
  {
   "start": 24.0,
@@ -100,7 +100,7 @@
  {
   "start": 25.9,
   "end": 27.35,
-  "scene": "wall",
+  "scene": "alley",
   "text": "",
   "action": "idea"
  },
@@ -109,21 +109,21 @@
   "end": 29.35,
   "scene": "room",
   "text": "",
-  "action": "phone_call"
+  "action": "phone"
  },
  {
   "start": 29.4,
   "end": 30.95,
   "scene": "park",
   "text": "",
-  "action": "broken_link"
+  "action": "broken"
  },
  {
   "start": 31.0,
   "end": 32.95,
   "scene": "room",
   "text": "",
-  "action": "bigger_slice"
+  "action": "slice"
  },
  {
   "start": 33.0,
@@ -137,6 +137,6 @@
   "end": 36.55,
   "scene": "stage",
   "text": "",
-  "action": "empty_seats"
+  "action": "empty"
  }
 ]
