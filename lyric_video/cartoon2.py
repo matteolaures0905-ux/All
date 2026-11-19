@@ -439,7 +439,7 @@ TOP_TINT = {"street": (24, 10, 52), "alley": (40, 16, 22), "park": (22, 70, 90),
 # ====================================================================== personnages
 HERO = dict(skin=(141, 90, 59), skin_d=(112, 68, 42), jacket=(28, 110, 140), jacket_d=(18, 82, 106),
             sleeve=(242, 230, 207), sleeve_d=(214, 200, 176), cuff=(255, 122, 61), pants=(34, 32, 48),
-            shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="cap_back", glow=(255, 178, 40),
+            shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="cap_back", glow=(255, 176, 20),
             hat_col=(255, 122, 61), hair=(26, 20, 16), chain=True, patch=True, tee=(250, 250, 250))
 FRIEND = dict(skin=(224, 172, 130), skin_d=(196, 140, 100), jacket=(80, 170, 90), jacket_d=(58, 136, 70),
               sleeve=(80, 170, 90), sleeve_d=(58, 136, 70), cuff=(58, 136, 70), pants=(70, 80, 120),
@@ -542,16 +542,8 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
             d.line([P(x, -806), P(x, -766)], fill=shade(st["hat_col"], 0.65), width=S(4))
         d.rounded_rectangle([*P(50, -805), *P(96, -772)], S(5), fill=(250, 250, 250), outline=INK, width=S(3))
     elif hat == "cap_back":
-        hc = st["hat_col"]
-        # visiere qui depasse derriere la tete
-        d.rounded_rectangle([*P(-40, -905), *P(150, -862)], S(20), fill=shade(hc, 0.7), outline=INK, width=lw)
-        d.chord([*P(-120, -905), *P(120, -705)], 180, 360, fill=hc, outline=INK, width=lw)
-        d.arc([*P(-60, -900), *P(60, -720)], 200, 340, fill=shade(hc, 0.8), width=S(5))
-        d.ellipse([*P(-12, -915), *P(12, -893)], fill=shade(hc, 0.8), outline=INK, width=S(4))
-        # ouverture de la sangle sur le front (on voit les cheveux) + reglage
-        d.chord([*P(-46, -838), *P(46, -770)], 180, 360, fill=st["hair"], outline=INK, width=S(5))
-        d.rounded_rectangle([*P(-34, -812), *P(34, -800)], S(4), fill=(30, 30, 40))
-        d.line([P(-118, -805), P(118, -805)], fill=INK, width=S(6))
+        draw_cap_back(frame, P(0, -826), s, st["hat_col"], st["hair"], t)
+        d = ImageDraw.Draw(frame)
     elif hat == "cap":
         d.chord([*P(-114, -900), *P(114, -720)], 180, 360, fill=st["hat_col"], outline=INK, width=lw)
         d.rounded_rectangle([*P(-30, -830), *P(170, -795)], S(16), fill=shade(st["hat_col"], 0.8), outline=INK, width=lw)
@@ -578,6 +570,16 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
     blink = ((t + phase * 1.3) % 3.4) < 0.12 or pose.get("eyes") == "closed"
     sleepy = pose.get("eyes") == "sleepy"
     glows = []
+    if st.get("glow") and not blink and pose.get("shades", 0) < 0.9:
+        gc = st["glow"]
+        pulse = 0.85 + 0.15 * math.sin(t * 5)
+        for k in (-1, 1):
+            gx_, gy_ = P(40 * k, -695)
+            for rad, al, bl in ((S(95), int(80 * pulse), 0.45), (S(55), int(190 * pulse), 0.3)):
+                lay = Image.new("RGBA", (rad * 4, rad * 4), (0, 0, 0, 0))
+                ImageDraw.Draw(lay).ellipse([rad * 1.1, rad * 1.5, rad * 2.9, rad * 2.5], fill=gc + (al,))
+                frame.alpha_composite(lay.filter(ImageFilter.GaussianBlur(rad * bl)), (int(gx_ - rad * 2), int(gy_ - rad * 2)))
+        d = ImageDraw.Draw(frame)
     for k in (-1, 1):
         ex_, ey_ = P(40 * k, -695)
         if blink:
@@ -601,8 +603,10 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
                 return [(ex_ + s * (x * math.cos(tilt) - y * math.sin(tilt)), ey_ + s * (x * math.sin(tilt) + y * math.cos(tilt))) for x, y in pts]
             outer = almond(38, 26)
             d.polygon(outer, fill=INK)
+            d.polygon(almond(35, 23), fill=mix(gc, (255, 255, 255), 0.2))   # liseré neon
             d.polygon(almond(31, 20), fill=gc)
-            d.polygon(almond(31, 20)[:25] + [(ex_, ey_ + S(4))], fill=mix(gc, (255, 255, 230), 0.45))
+            d.polygon(almond(24, 15), fill=mix(gc, (255, 250, 200), 0.55))
+            d.polygon(almond(14, 9), fill=(255, 252, 225))                    # coeur presque blanc
             # pupille fendue verticale (s'elargit un peu quand il est surpris)
             px_, py_ = ex_ + lx * S(9), ey_ + ly * S(4)
             pw = S(5 + (5 if pose.get("brows") == "up" else 0))
@@ -621,14 +625,6 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         d.ellipse([px_ - S(4), py_ - S(10), px_ + S(3), py_ - S(3)], fill=(255, 255, 255))
         if sleepy:
             d.chord([ex_ - S(26), ey_ - S(30), ex_ + S(26), ey_ + S(26)], 180, 360, fill=st["skin"], outline=INK, width=S(5))
-    if glows and pose.get("shades", 0) < 0.9:
-        gc = st["glow"]
-        r = int(S(60))
-        for (gx_, gy_) in glows:
-            lay = Image.new("RGBA", (r * 4, r * 4), (0, 0, 0, 0))
-            ImageDraw.Draw(lay).ellipse([r * 1.2, r * 1.6, r * 2.8, r * 2.4], fill=gc + (90,))
-            frame.alpha_composite(lay.filter(ImageFilter.GaussianBlur(r * 0.35)), (int(gx_ - r * 2), int(gy_ - r * 2)))
-        d = ImageDraw.Draw(frame)
     # sourcils
     brows = pose.get("brows", "neutral")
     for k in (-1, 1):
@@ -713,6 +709,54 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         if prop:
             prop(frame, C, s, t)
             d = ImageDraw.Draw(frame)
+
+
+def draw_cap_back(frame, center, s, hc, hair, t):
+    """Casquette snapback portee a l'envers : 6 panneaux, ombrage, coutures, visiere a l'arriere,
+    ouverture + sangle a pression sur le front. Dessinee en x3 puis reduite (bords lisses)."""
+    Q = 3 * s
+    pw, ph = 380, 230
+    im = Image.new("RGBA", (int(pw * Q), int(ph * Q)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    def q(*v):
+        return [x * Q for x in v]
+    ink = INK + (255,)
+    lw = max(2, int(7 * Q))
+    hi, mid, lo = shade(hc, 1.18), hc, shade(hc, 0.78)
+    # visiere (a l'arriere, on la voit depasser en haut a droite, dessous plus fonce)
+    d.polygon(q(225, 70, 362, 30, 372, 58, 248, 112), fill=shade(hc, 0.62) + (255,), outline=ink, width=lw)
+    d.polygon(q(232, 74, 360, 36, 364, 46, 236, 86), fill=shade(hc, 0.9) + (255,))
+    for k in range(4):  # surpiqures de la visiere
+        d.line(q(250 + k * 6, 82 + k * 5, 352 - k * 2, 46 + k * 3), fill=shade(hc, 0.5) + (255,), width=max(1, int(2 * Q)))
+    # calotte (peinte dans son propre calque puis decoupee a la forme du dome)
+    box = q(50, 22, 330, 300)
+    crown = Image.new("RGBA", im.size, mid + (255,))
+    cd = ImageDraw.Draw(crown)
+    cd.ellipse(q(10, -40, 200, 220), fill=hi + (255,))                     # reflet gauche
+    cd.ellipse(q(250, 0, 420, 260), fill=lo + (255,))                      # ombre droite
+    for xa in (-115, -60, 0, 60, 115):                                      # coutures des panneaux
+        cd.line(q(190, 22, 190 + xa * 1.25, 165), fill=shade(hc, 0.6) + (255,), width=max(1, int(3 * Q)))
+    m = Image.new("L", im.size, 0)
+    ImageDraw.Draw(m).chord(box, 180, 360, fill=255)
+    im.paste(crown, (0, 0), m)
+    d = ImageDraw.Draw(im)
+    d.chord(box, 180, 360, outline=ink, width=lw)
+    # bandeau bas
+    d.rectangle(q(50, 150, 330, 161), fill=lo + (255,), outline=ink, width=max(1, int(5 * Q)))
+    # ouverture snapback : on voit les cheveux
+    d.chord(q(135, 92, 245, 210), 180, 360, fill=hair + (255,), outline=ink, width=max(2, int(6 * Q)))
+    # sangle a pression
+    d.rounded_rectangle(q(128, 132, 252, 150), int(6 * Q), fill=(28, 26, 36, 255), outline=ink, width=max(1, int(3 * Q)))
+    for k in range(5):
+        cx = 146 + k * 22
+        d.ellipse(q(cx - 5, 136, cx + 5, 146), fill=(200, 200, 215, 255))
+    # bouton du dessus + petit patch brode sur le cote
+    d.ellipse(q(178, 12, 202, 32), fill=hi + (255,), outline=ink, width=max(1, int(4 * Q)))
+    d.ellipse(q(70, 100, 108, 138), fill=(250, 240, 220, 255), outline=ink, width=max(1, int(4 * Q)))
+    d.polygon(q(92, 104, 80, 122, 90, 122, 84, 136, 99, 114, 89, 114, 96, 104), fill=ACC + (255,))
+    d.arc(q(70, 40, 200, 170), 200, 245, fill=(255, 255, 255, 170), width=max(1, int(6 * Q)))  # brillance
+    im = im.resize((max(1, int(pw * s)), max(1, int(ph * s))), Image.LANCZOS).rotate(-5, expand=True, resample=Image.BICUBIC)
+    frame.alpha_composite(im, (int(center[0] - im.width / 2 + 0 * s), int(center[1] - im.height / 2 + 10 * s)))
 
 
 def default_pose(t, talk, phase=0):
