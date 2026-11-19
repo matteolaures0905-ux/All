@@ -33,3 +33,12 @@ python3 make_cartoon.py --lyrics paroles.json --audio son.mp3 --start 45 --durat
 
 Pour imposer un décor à une ligne : ajoute `"scene": "stage"` (street, wall, park, room, stage, roof).
 Police : Oswald (licence SIL OFL, voir `fonts/OFL-Oswald.txt`).
+
+## Extrait de 40,7 s : modèle minuté
+
+`paroles_a_remplir.json` contient 20 emplacements calés sur la voix. Chaque ligne de l'extrait est coupée en deux
+(à la virgule), donc 10 lignes donnent 20 emplacements. Remplis le champ `"text"` puis lance :
+
+```bash
+python3 make_cartoon.py --lyrics paroles_a_remplir.json --audio son_extrait.m4a --duration 40.7 --out ma_video.mp4
+```
