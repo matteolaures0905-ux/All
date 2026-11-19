@@ -439,7 +439,7 @@ TOP_TINT = {"street": (24, 10, 52), "alley": (40, 16, 22), "park": (22, 70, 90),
 # ====================================================================== personnages
 HERO = dict(skin=(141, 90, 59), skin_d=(112, 68, 42), jacket=(28, 110, 140), jacket_d=(18, 82, 106),
             sleeve=(242, 230, 207), sleeve_d=(214, 200, 176), cuff=(255, 122, 61), pants=(34, 32, 48),
-            shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="cap_back", glow=(90, 240, 255),
+            shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="cap_back", glow=(196, 255, 70),
             hat_col=(255, 122, 61), hair=(26, 20, 16), chain=True, patch=True, tee=(250, 250, 250))
 FRIEND = dict(skin=(224, 172, 130), skin_d=(196, 140, 100), jacket=(80, 170, 90), jacket_d=(58, 136, 70),
               sleeve=(80, 170, 90), sleeve_d=(58, 136, 70), cuff=(58, 136, 70), pants=(70, 80, 120),
@@ -586,12 +586,34 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         if st.get("glow"):
             gc = st["glow"]
             glows.append((ex_, ey_))
-            d.ellipse([ex_ - S(26), ey_ - S(30), ex_ + S(26), ey_ + S(30)], fill=(16, 20, 40), outline=INK, width=S(5))
-            d.ellipse([ex_ - S(19), ey_ - S(23), ex_ + S(19), ey_ + S(23)], fill=gc)
-            px_, py_ = ex_ + lx * S(6), ey_ + ly * S(7)
-            d.ellipse([px_ - S(10), py_ - S(12), px_ + S(10), py_ + S(12)], fill=(240, 255, 255))
-            if sleepy:
-                d.chord([ex_ - S(28), ey_ - S(32), ex_ + S(28), ey_ + S(28)], 180, 360, fill=st["skin"], outline=INK, width=S(5))
+            # amande inclinee : coin exterieur releve
+            def almond(rx, ry):
+                pts = []
+                for i in range(25):
+                    u = i / 24
+                    x = -rx + 2 * rx * u
+                    pts.append((x, -ry * math.sin(math.pi * u)))
+                for i in range(25):
+                    u = 1 - i / 24
+                    x = -rx + 2 * rx * u
+                    pts.append((x, ry * 0.75 * math.sin(math.pi * u)))
+                tilt = math.radians(-14 * k)
+                return [(ex_ + s * (x * math.cos(tilt) - y * math.sin(tilt)), ey_ + s * (x * math.sin(tilt) + y * math.cos(tilt))) for x, y in pts]
+            outer = almond(38, 26)
+            d.polygon(outer, fill=INK)
+            d.polygon(almond(31, 20), fill=gc)
+            d.polygon(almond(31, 20)[:25] + [(ex_, ey_ + S(4))], fill=mix(gc, (255, 255, 230), 0.45))
+            # pupille fendue verticale (s'elargit un peu quand il est surpris)
+            px_, py_ = ex_ + lx * S(9), ey_ + ly * S(4)
+            pw = S(5 + (5 if pose.get("brows") == "up" else 0))
+            d.ellipse([px_ - pw, py_ - S(21), px_ + pw, py_ + S(17)], fill=(10, 8, 16))
+            d.ellipse([px_ + S(7), py_ - S(14), px_ + S(13), py_ - S(7)], fill=(255, 255, 255))
+            d.line(outer[:25], fill=INK, width=S(7))
+            if sleepy:  # paupiere a moitie fermee
+                lid = almond(40, 28)[:25]
+                mid = [(x, y + (ey_ - y) * 0.45) for x, y in almond(38, 26)[:25]]
+                d.polygon(lid + mid[::-1], fill=st["skin"])
+                d.line(mid, fill=INK, width=S(7))
             continue
         d.ellipse([ex_ - S(24), ey_ - S(28), ex_ + S(24), ey_ + S(28)], fill=(255, 255, 255), outline=INK, width=S(5))
         px_, py_ = ex_ + lx * S(9), ey_ + ly * S(10)
@@ -604,11 +626,9 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         r = int(S(60))
         for (gx_, gy_) in glows:
             lay = Image.new("RGBA", (r * 4, r * 4), (0, 0, 0, 0))
-            ImageDraw.Draw(lay).ellipse([r, r * 1.3, r * 3, r * 2.7], fill=gc + (150,))
+            ImageDraw.Draw(lay).ellipse([r * 1.2, r * 1.6, r * 2.8, r * 2.4], fill=gc + (90,))
             frame.alpha_composite(lay.filter(ImageFilter.GaussianBlur(r * 0.35)), (int(gx_ - r * 2), int(gy_ - r * 2)))
         d = ImageDraw.Draw(frame)
-        for (gx_, gy_) in glows:  # on redessine le centre par-dessus le halo
-            d.ellipse([gx_ - S(19), gy_ - S(23), gx_ + S(19), gy_ + S(23)], outline=INK, width=S(4))
     # sourcils
     brows = pose.get("brows", "neutral")
     for k in (-1, 1):
