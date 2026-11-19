@@ -14,6 +14,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_video import load_lyrics, audio_energy, bpm_energy, ease_out_back  # noqa: E402
 import json
+import actions as A
+A.FONT = lambda sz: font(F_BOLD, sz)
 
 W, H = 1080, 1920
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -180,7 +182,7 @@ GROUND = {"street": 1690, "wall": 1650, "park": 1640, "stage": 1530, "room": 170
 
 
 # ------------------------------------------------------------------ personnages
-def draw_hero(d, cx, gy, t, talk, s=1.0, step=0.0, look=0.0):
+def draw_hero(d, cx, gy, t, talk, s=1.0, step=0.0, look=0.0, pose="idle", look_y=0.0):
     """Personnage original : casquette jaune a l'envers, sweat a capuche gris, baskets blanches."""
     bob = 6 * math.sin(t * 6) * s
     def P(x, y): return (cx + x * s, gy + y * s + (bob if y < -200 else 0))
@@ -201,7 +203,12 @@ def draw_hero(d, cx, gy, t, talk, s=1.0, step=0.0, look=0.0):
     arm = 12 * math.sin(t * 6 + 1) + (40 if talk > 0.55 else 0)
     for k in (-1, 1):
         a0 = P(118 * k, -520)
-        a1 = P((150 + (arm if k == 1 else 0) * 0.6) * k, -330 - (arm if k == 1 else 0) * 1.6)
+        if pose == "shrug":
+            a1 = P(245 * k, -640 + 10 * math.sin(t * 8))
+        elif pose == "think" and k == 1:
+            a1 = P(60, -600)
+        else:
+            a1 = P((150 + (arm if k == 1 else 0) * 0.6) * k, -330 - (arm if k == 1 else 0) * 1.6)
         d.line([a0, a1], fill=INK, width=int(64 * s))
         d.line([a0, a1], fill=G[4], width=int(50 * s))
         d.ellipse([a1[0] - 28 * s, a1[1] - 28 * s, a1[0] + 28 * s, a1[1] + 28 * s], fill=G[6], outline=INK, width=LW)
@@ -214,7 +221,7 @@ def draw_hero(d, cx, gy, t, talk, s=1.0, step=0.0, look=0.0):
     blink = (t % 3.7) < 0.12
     ex = 42 + look * 12
     for k in (-1, 1):
-        x, y = P(ex * k + look * 18, -700)
+        x, y = P(ex * k + look * 18, -700 + look_y * 14)
         if blink:
             d.line([x - 16 * s, y, x + 16 * s, y], fill=INK, width=int(7 * s))
         else:
@@ -230,15 +237,22 @@ def draw_hero(d, cx, gy, t, talk, s=1.0, step=0.0, look=0.0):
     d.line([P(-100, -760), P(100, -760)], fill=INK, width=5)
 
 
-def draw_extra(d, cx, gy, s, shade, t, ph):
+def draw_extra(d, cx, gy, s, shade, t, ph, look=0.0, arms=False):
     """Silhouette secondaire simple."""
     b = 4 * math.sin(t * 5 + ph)
+    if arms:  # gesticule
+        for k in (-1, 1):
+            ang = math.radians(-120 + 50 * k + 25 * math.sin(t * 7 + ph + k))
+            x0, y0 = cx + 75 * k * s, gy - 430 * s + b
+            x1, y1 = x0 + 200 * s * math.cos(ang) * k, y0 + 200 * s * math.sin(ang)
+            d.line([x0, y0, x1, y1], fill=INK, width=int(46 * s)); d.line([x0, y0, x1, y1], fill=G[shade], width=int(34 * s))
     d.rounded_rectangle([cx - 85 * s, gy - 470 * s + b, cx + 85 * s, gy - 200 * s], int(50 * s), fill=G[shade], outline=INK, width=LW)
     for k in (-1, 1):
         d.rounded_rectangle([cx + (28 * k - 22) * s, gy - 220 * s, cx + (28 * k + 22) * s, gy], int(10 * s), fill=G[0], outline=INK, width=LW)
     d.ellipse([cx - 70 * s, gy - 620 * s + b, cx + 70 * s, gy - 460 * s + b], fill=G[5], outline=INK, width=LW)
     for k in (-1, 1):
-        d.ellipse([cx + 25 * k * s - 9 * s, gy - 555 * s + b, cx + 25 * k * s + 9 * s, gy - 535 * s + b], fill=INK)
+        ex_ = cx + (25 * k + 14 * look) * s
+        d.ellipse([ex_ - 9 * s, gy - 555 * s + b, ex_ + 9 * s, gy - 535 * s + b], fill=INK)
     d.chord([cx - 72 * s, gy - 630 * s + b, cx + 72 * s, gy - 520 * s + b], 180, 360, fill=G[shade - 1 if shade > 0 else 0], outline=INK, width=LW)
 
 
@@ -324,6 +338,7 @@ def main():
     for i, l in enumerate(lines):
         l["scene"] = raw[i].get("scene") or ORDER[i % len(ORDER)]
         l["seed"] = i
+        l["action"] = raw[i].get("action")
     rms, pulse = audio_energy(a.audio, a.start, dur, fps) if a.audio else bpm_energy(a.bpm, dur, fps)
     # la bouche suit l'energie lissee pendant qu'une ligne est chantee
     talk_env = np.convolve(rms, np.ones(3) / 3, "same")
@@ -378,24 +393,53 @@ def main():
             d = ImageDraw.Draw(frame)
             if scene == "room":
                 d.ellipse([cx - 40, 570, cx + 40, 610], fill=ACC + (255,))
-        # figurants
-        n_ex = {"street": 3, "park": 2, "stage": 3, "roof": 0, "wall": 0, "room": 1}[scene]
-        for k in range(n_ex):
-            ex = 560 + k * 170 + rnd.randint(-20, 20)
-            draw_extra(d, ex, gy - 10 - k * 6, 0.82 - k * 0.04, rnd.choice([1, 2, 5, 6]), t, k)
-        # heros : entre en marchant au debut de la scene "street"
-        hx = 300
-        step = 0.0
-        if scene == "street" and lt < 0.9:
-            hx = -150 + 450 * min(1, lt / 0.9); step = t
-        draw_hero(d, hx, gy, t, talk, s=0.95, step=step, look=0.6 if n_ex else 0)
-        # bulle de dialogue sur les lignes paires
-        if li % 3 == 1 and lt > 0.3:
-            k = ease_out_back((lt - 0.3) / 0.25)
-            bx, by = hx + 120, gy - 900
-            d.rounded_rectangle([bx, by, bx + 260 * k, by + 140 * k], int(40 * k) + 1, fill=G[0] + (255,), outline=G[7] + (255,), width=6)
-            for r in range(3):
-                d.line([bx + 40 * k, by + (35 + r * 35) * k, bx + (220 - r * 50) * k, by + (35 + r * 35) * k], fill=G[7], width=max(1, int(12 * k)))
+        if line.get("action"):
+            c = dict(t=t, lt=lt, dur=line["end"] - line["start"] + 0.25, gy=gy, p=p, hx=540)
+            cfg = A.ACTIONS[line["action"]](c)
+            hxf = cfg.get("hero_x")
+            hx = hxf(lt) if hxf else None
+            c["hx"] = hx if hx is not None else 540
+            if cfg.get("dim"):
+                frame.alpha_composite(Image.new("RGBA", (W, H), (10, 10, 20, int(255 * cfg["dim"]))))
+                d = ImageDraw.Draw(frame)
+            if cfg.get("back"):
+                cfg["back"](frame, c); d = ImageDraw.Draw(frame)
+            n_ex = cfg.get("extras", 0)
+            for k in range(n_ex):
+                ex = cfg.get("extras_x", 560) + k * 165 + rnd.randint(-15, 15)
+                lk = cfg.get("extras_look", 0)
+                if hx is not None and not lk:
+                    lk = -1 if hx < ex else 1
+                draw_extra(d, ex, gy - 10 - k * 6, 0.82 - k * 0.04, rnd.choice([1, 2, 5, 6]), t, k,
+                           look=lk, arms=cfg.get("extras_arms", False))
+            pose = cfg.get("pose", "idle")
+            look = {"look_r": 1, "look": 0, "scan": math.sin(t * 2.2)}.get(pose, 0)
+            look_y = -1 if pose in ("look", "think") else 0
+            def hero():
+                if hx is None:
+                    return
+                walking = cfg.get("walking") and 0.4 < lt < 2.2
+                draw_hero(ImageDraw.Draw(frame), hx, gy, t, talk, s=0.95 * cfg.get("hero_scale", 1),
+                          step=t if walking else 0, look=look, pose=pose, look_y=look_y)
+            if cfg.get("hero_on_top"):
+                if cfg.get("front"):
+                    cfg["front"](frame, c)
+                hero()
+            else:
+                hero()
+                if cfg.get("front"):
+                    cfg["front"](frame, c)
+            d = ImageDraw.Draw(frame)
+        else:
+            n_ex = {"street": 3, "park": 2, "stage": 3, "roof": 0, "wall": 0, "room": 1}[scene]
+            for k in range(n_ex):
+                ex = 560 + k * 170 + rnd.randint(-20, 20)
+                draw_extra(d, ex, gy - 10 - k * 6, 0.82 - k * 0.04, rnd.choice([1, 2, 5, 6]), t, k)
+            hx = 300
+            step = 0.0
+            if scene == "street" and lt < 0.9:
+                hx = -150 + 450 * min(1, lt / 0.9); step = t
+            draw_hero(d, hx, gy, t, talk, s=0.95, step=step, look=0.6 if n_ex else 0)
         # poussieres
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); ld = ImageDraw.Draw(lay)
         for (x, y, r, v) in dust:
