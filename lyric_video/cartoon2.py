@@ -788,8 +788,11 @@ def bubble(d, x, y, k, w=240, h=130, col=(255, 255, 255), line=(60, 50, 80), fac
         d.line([x + 30 * k, yy, x + w - (30 + 40 * (i % 2)) * k, yy], fill=line, width=max(1, int(12 * k)))
 
 
+HIDE_SCENE_TEXT = [False]
+
+
 def big_text(frame, x, y, txt, size, k=1.0, ang=0, col=ACC):
-    if k <= 0.03:
+    if k <= 0.03 or (HIDE_SCENE_TEXT[0] and txt != "?"):
         return
     f = font(int(size))
     l, t_, r, b = f.getbbox(txt)
@@ -1443,6 +1446,7 @@ def main():
         singing = any(l["start"] <= t < l["end"] for l in lines)
         talk = float(talk_env[min(fi, len(talk_env) - 1)]) if singing else 0.05
         c = dict(t=t, lt=lt, dur=line["end"] - line["start"] + 0.25, gy=gy, p=p, hx=540)
+        HIDE_SCENE_TEXT[0] = any(w["text"] for w in line["words"])
         cfg = ACTIONS[line["action"] or "bored"](c)
         hx = cfg.get("hx", 540)
         c["hx"] = hx

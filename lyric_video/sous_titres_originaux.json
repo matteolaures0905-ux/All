@@ -1,0 +1,142 @@
+[
+ {
+  "start": 0.9,
+  "end": 1.95,
+  "scene": "street",
+  "text": "pas d'humeur ce *SOIR*",
+  "action": "bored"
+ },
+ {
+  "start": 2.0,
+  "end": 3.95,
+  "scene": "street",
+  "text": "il trace sa *ROUTE*",
+  "action": "walk_away"
+ },
+ {
+  "start": 4.0,
+  "end": 5.95,
+  "scene": "alley",
+  "text": "les *MICROS* débarquent",
+  "action": "press"
+ },
+ {
+  "start": 6.0,
+  "end": 7.95,
+  "scene": "alley",
+  "text": "aucune *RÉPONSE*",
+  "action": "shrug"
+ },
+ {
+  "start": 8.0,
+  "end": 9.45,
+  "scene": "park",
+  "text": "ça chuchote dans son *DOS*",
+  "action": "whisper"
+ },
+ {
+  "start": 9.5,
+  "end": 11.35,
+  "scene": "park",
+  "text": "son pote chez la *BANDE*",
+  "action": "friend_with"
+ },
+ {
+  "start": 11.4,
+  "end": 12.45,
+  "scene": "room",
+  "text": "sourires de *FAÇADE*",
+  "action": "me_with"
+ },
+ {
+  "start": 12.5,
+  "end": 14.95,
+  "scene": "roof",
+  "text": "que des regards *JALOUX*",
+  "action": "envious"
+ },
+ {
+  "start": 15.0,
+  "end": 16.45,
+  "scene": "street",
+  "text": "trop de *BLABLA*",
+  "action": "rumors"
+ },
+ {
+  "start": 16.5,
+  "end": 18.45,
+  "scene": "street",
+  "text": "il coupe le *SON*",
+  "action": "rumors_cover"
+ },
+ {
+  "start": 18.5,
+  "end": 19.95,
+  "scene": "alley",
+  "text": "un seul essai… *RATÉ*",
+  "action": "target"
+ },
+ {
+  "start": 20.0,
+  "end": 21.95,
+  "scene": "stage",
+  "text": "chacun joue son *RÔLE*",
+  "action": "drama"
+ },
+ {
+  "start": 22.0,
+  "end": 23.95,
+  "scene": "roof",
+  "text": "l'horloge *S'EMBALLE*",
+  "action": "time"
+ },
+ {
+  "start": 24.0,
+  "end": 25.85,
+  "scene": "room",
+  "text": "le sable *FILE*",
+  "action": "hourglass"
+ },
+ {
+  "start": 25.9,
+  "end": 27.35,
+  "scene": "alley",
+  "text": "*DÉCLIC* !",
+  "action": "idea"
+ },
+ {
+  "start": 27.4,
+  "end": 29.35,
+  "scene": "room",
+  "text": "le téléphone *SONNE*",
+  "action": "phone"
+ },
+ {
+  "start": 29.4,
+  "end": 30.95,
+  "scene": "park",
+  "text": "le cœur se *FEND*",
+  "action": "broken"
+ },
+ {
+  "start": 31.0,
+  "end": 32.95,
+  "scene": "room",
+  "text": "qui a pris ma *PART* ?!",
+  "action": "slice"
+ },
+ {
+  "start": 33.0,
+  "end": 35.35,
+  "scene": "street",
+  "text": "seul sous la *PLUIE*",
+  "action": "alone"
+ },
+ {
+  "start": 35.4,
+  "end": 36.55,
+  "scene": "stage",
+  "text": "personne dans la *SALLE*",
+  "action": "empty"
+ }
+]
