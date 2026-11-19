@@ -439,7 +439,7 @@ TOP_TINT = {"street": (24, 10, 52), "alley": (40, 16, 22), "park": (22, 70, 90),
 # ====================================================================== personnages
 HERO = dict(skin=(141, 90, 59), skin_d=(112, 68, 42), jacket=(28, 110, 140), jacket_d=(18, 82, 106),
             sleeve=(242, 230, 207), sleeve_d=(214, 200, 176), cuff=(255, 122, 61), pants=(34, 32, 48),
-            shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="beanie",
+            shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="cap_back", glow=(90, 240, 255),
             hat_col=(255, 122, 61), hair=(26, 20, 16), chain=True, patch=True, tee=(250, 250, 250))
 FRIEND = dict(skin=(224, 172, 130), skin_d=(196, 140, 100), jacket=(80, 170, 90), jacket_d=(58, 136, 70),
               sleeve=(80, 170, 90), sleeve_d=(58, 136, 70), cuff=(58, 136, 70), pants=(70, 80, 120),
@@ -541,6 +541,17 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         for x in range(-100, 101, 28):
             d.line([P(x, -806), P(x, -766)], fill=shade(st["hat_col"], 0.65), width=S(4))
         d.rounded_rectangle([*P(50, -805), *P(96, -772)], S(5), fill=(250, 250, 250), outline=INK, width=S(3))
+    elif hat == "cap_back":
+        hc = st["hat_col"]
+        # visiere qui depasse derriere la tete
+        d.rounded_rectangle([*P(-40, -905), *P(150, -862)], S(20), fill=shade(hc, 0.7), outline=INK, width=lw)
+        d.chord([*P(-120, -905), *P(120, -705)], 180, 360, fill=hc, outline=INK, width=lw)
+        d.arc([*P(-60, -900), *P(60, -720)], 200, 340, fill=shade(hc, 0.8), width=S(5))
+        d.ellipse([*P(-12, -915), *P(12, -893)], fill=shade(hc, 0.8), outline=INK, width=S(4))
+        # ouverture de la sangle sur le front (on voit les cheveux) + reglage
+        d.chord([*P(-46, -838), *P(46, -770)], 180, 360, fill=st["hair"], outline=INK, width=S(5))
+        d.rounded_rectangle([*P(-34, -812), *P(34, -800)], S(4), fill=(30, 30, 40))
+        d.line([P(-118, -805), P(118, -805)], fill=INK, width=S(6))
     elif hat == "cap":
         d.chord([*P(-114, -900), *P(114, -720)], 180, 360, fill=st["hat_col"], outline=INK, width=lw)
         d.rounded_rectangle([*P(-30, -830), *P(170, -795)], S(16), fill=shade(st["hat_col"], 0.8), outline=INK, width=lw)
@@ -566,10 +577,21 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
     lx, ly = pose.get("look", (0, 0))
     blink = ((t + phase * 1.3) % 3.4) < 0.12 or pose.get("eyes") == "closed"
     sleepy = pose.get("eyes") == "sleepy"
+    glows = []
     for k in (-1, 1):
         ex_, ey_ = P(40 * k, -695)
         if blink:
-            d.arc([ex_ - S(22), ey_ - S(16), ex_ + S(22), ey_ + S(12)], 20, 160, fill=INK, width=S(6))
+            d.arc([ex_ - S(22), ey_ - S(16), ex_ + S(22), ey_ + S(12)], 20, 160, fill=st.get("glow", INK), width=S(7))
+            continue
+        if st.get("glow"):
+            gc = st["glow"]
+            glows.append((ex_, ey_))
+            d.ellipse([ex_ - S(26), ey_ - S(30), ex_ + S(26), ey_ + S(30)], fill=(16, 20, 40), outline=INK, width=S(5))
+            d.ellipse([ex_ - S(19), ey_ - S(23), ex_ + S(19), ey_ + S(23)], fill=gc)
+            px_, py_ = ex_ + lx * S(6), ey_ + ly * S(7)
+            d.ellipse([px_ - S(10), py_ - S(12), px_ + S(10), py_ + S(12)], fill=(240, 255, 255))
+            if sleepy:
+                d.chord([ex_ - S(28), ey_ - S(32), ex_ + S(28), ey_ + S(28)], 180, 360, fill=st["skin"], outline=INK, width=S(5))
             continue
         d.ellipse([ex_ - S(24), ey_ - S(28), ex_ + S(24), ey_ + S(28)], fill=(255, 255, 255), outline=INK, width=S(5))
         px_, py_ = ex_ + lx * S(9), ey_ + ly * S(10)
@@ -577,6 +599,16 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         d.ellipse([px_ - S(4), py_ - S(10), px_ + S(3), py_ - S(3)], fill=(255, 255, 255))
         if sleepy:
             d.chord([ex_ - S(26), ey_ - S(30), ex_ + S(26), ey_ + S(26)], 180, 360, fill=st["skin"], outline=INK, width=S(5))
+    if glows and pose.get("shades", 0) < 0.9:
+        gc = st["glow"]
+        r = int(S(60))
+        for (gx_, gy_) in glows:
+            lay = Image.new("RGBA", (r * 4, r * 4), (0, 0, 0, 0))
+            ImageDraw.Draw(lay).ellipse([r, r * 1.3, r * 3, r * 2.7], fill=gc + (150,))
+            frame.alpha_composite(lay.filter(ImageFilter.GaussianBlur(r * 0.35)), (int(gx_ - r * 2), int(gy_ - r * 2)))
+        d = ImageDraw.Draw(frame)
+        for (gx_, gy_) in glows:  # on redessine le centre par-dessus le halo
+            d.ellipse([gx_ - S(19), gy_ - S(23), gx_ + S(19), gy_ + S(23)], outline=INK, width=S(4))
     # sourcils
     brows = pose.get("brows", "neutral")
     for k in (-1, 1):
