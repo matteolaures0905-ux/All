@@ -596,7 +596,7 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
     glows = []
     if st.get("glow") and not blink and pose.get("shades", 0) < 0.9:
         gc = st["glow"]
-        pulse = 0.85 + 0.15 * math.sin(t * 5)
+        pulse = 0.65 + 0.35 * VOC[0] + 0.4 * VOC[1]
         for k in (-1, 1):
             gx_, gy_ = P(40 * k, -695)
             for rad, al, bl in ((S(95), int(80 * pulse), 0.45), (S(55), int(190 * pulse), 0.3)):
@@ -823,6 +823,43 @@ def draw_cap_back(frame, center, s, hc, hair, t):
     d.arc(q(70, 40, 200, 170), 200, 245, fill=(255, 255, 255, 170), width=max(1, int(6 * Q)))  # brillance
     im = im.resize((max(1, int(pw * s)), max(1, int(ph * s))), Image.LANCZOS).rotate(-5, expand=True, resample=Image.BICUBIC)
     frame.alpha_composite(im, (int(center[0] - im.width / 2 + 0 * s), int(center[1] - im.height / 2 + 10 * s)))
+
+
+VOC = [0.0, 0.0]  # [energie de la voix 0..1, flash d'attaque 0..1] pour l'image en cours
+
+
+def vocal_features(path, start, dur, fps):
+    """Energie de la bande vocale (350-3500 Hz) par image + instants d'attaque des syllabes."""
+    import subprocess as sp
+    sr = 16000
+    pcm = np.frombuffer(sp.run(["ffmpeg", "-v", "error", "-ss", str(start), "-t", str(dur), "-i", path, "-ac", "1",
+                                "-ar", str(sr), "-f", "f32le", "-"], capture_output=True, check=True).stdout, np.float32)
+    hop, win = sr // fps, 1024
+    n = int(dur * fps)
+    f = np.fft.rfftfreq(win, 1 / sr)
+    band = (f > 350) & (f < 3500)
+    env = np.zeros(n)
+    for i in range(n):
+        seg = pcm[i * hop:i * hop + win]
+        if len(seg) < win:
+            seg = np.pad(seg, (0, win - len(seg)))
+        env[i] = np.abs(np.fft.rfft(seg * np.hanning(win)))[band].sum()
+    env = np.convolve(env, np.ones(3) / 3, "same")
+    env = np.clip(env / (np.percentile(env, 97) + 1e-9), 0, 1)
+    lo = np.convolve(env, np.ones(9) / 9, "same")
+    nov = np.clip(env - lo, 0, None)
+    thr = np.percentile(nov, 80)
+    onsets, last = [], -1
+    for i in range(1, n - 1):
+        if nov[i] > thr and nov[i] >= nov[i - 1] and nov[i] >= nov[i + 1] and i - last >= int(0.12 * fps):
+            onsets.append(i / fps); last = i
+    flash = np.zeros(n)
+    for o in onsets:
+        i0 = int(o * fps)
+        for k in range(0, 8):
+            if i0 + k < n:
+                flash[i0 + k] = max(flash[i0 + k], math.exp(-k / 2.2))
+    return env, flash, onsets
 
 
 def default_pose(t, talk, phase=0):
@@ -1486,8 +1523,17 @@ def main():
         l["seed"] = i
     rms, pulse = audio_energy(a.audio, a.start, dur, fps) if a.audio else bpm_energy(a.bpm, dur, fps)
     talk_env = np.convolve(rms, np.ones(3) / 3, "same")
+    venv, vflash, onsets = (vocal_features(a.audio, a.start, dur, fps) if a.audio else (np.zeros(int(dur * fps)), np.zeros(int(dur * fps)), []))
+    talk_env = 0.4 * talk_env + 0.6 * venv
+    for l in lines:  # chaque mot du sous-titre apparait sur une attaque de la voix
+        ws = [w for w in l["words"] if w["text"]]
+        on = [o for o in onsets if l["start"] - 0.05 <= o < l["end"] - 0.25]
+        if ws and len(on) >= len(ws):
+            idx = np.linspace(0, len(on) - 1, len(ws)).round().astype(int)
+            for w, j in zip(ws, idx):
+                w["t"] = on[j]
 
-    cache = {}
+    cache, lights = {}, {}
     def bg_for(scene):
         if scene not in cache:
             img = SCENES[scene][0](random.Random(42)).convert("RGBA")
@@ -1510,6 +1556,13 @@ def main():
             arr = np.asarray(img.convert("RGB")).astype(np.int16)
             arr += np.random.default_rng(len(cache)).integers(-6, 7, (H, W, 1))
             cache[scene] = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert("RGBA")
+            # calque des lumieres du decor (neons, fenetres, lampes) qui va pulser avec la voix
+            f = np.asarray(cache[scene].convert("RGB")).astype(np.float32)
+            lum = f.mean(2, keepdims=True) / 255
+            sat = (f.max(2, keepdims=True) - f.min(2, keepdims=True)) > 50
+            m = np.clip((lum - 0.5) / 0.3, 0, 1) * sat
+            gl = Image.fromarray(np.clip(f * m, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(14))
+            lights[scene] = (np.asarray(cache[scene].convert("RGB")).astype(np.float32), np.asarray(gl).astype(np.float32))
         return cache[scene]
 
     dust = [(random.random() * W, random.random() * H, random.uniform(2, 5), random.uniform(10, 35)) for _ in range(40)]
@@ -1521,7 +1574,12 @@ def main():
         line = lines[li]
         scene = line["scene"]
         gy = SCENES[scene][1]
-        frame = bg_for(scene).copy()
+        bg_for(scene)
+        fi_ = min(fi, len(venv) - 1)
+        VOC[0], VOC[1] = float(venv[fi_]), float(vflash[fi_])
+        base, gl = lights[scene]
+        inten = 0.15 + 0.9 * VOC[0] + 1.3 * VOC[1]
+        frame = Image.fromarray(np.clip(base + gl * inten, 0, 255).astype(np.uint8)).convert("RGBA")
         lt = t - (line["start"] - 0.25)
         p = float(pulse[min(fi, len(pulse) - 1)])
         singing = any(l["start"] <= t < l["end"] for l in lines)
@@ -1556,6 +1614,9 @@ def main():
             yy = (y - v * t) % H
             ld.ellipse([x - r, yy - r, x + r, yy + r], fill=(255, 255, 255, 60))
         frame.alpha_composite(lay)
+        if VOC[1] > 0.3:
+            fl = Image.new("RGBA", (W, H), (255, 190, 90, int(38 * VOC[1])))
+            frame.alpha_composite(fl)
         z = 1.0 + 0.035 * min(1, lt / 4) + 0.02 * p + (0.05 * (1 - lt / 0.2) if lt < 0.2 else 0)
         cw, ch = int(W / z), int(H / z)
         ox = (W - cw) // 2 + int(6 * p * math.sin(t * 50))

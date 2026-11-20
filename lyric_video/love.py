@@ -17,6 +17,23 @@ GIRL = dict(skin=(214, 158, 118), skin_d=(184, 126, 90), jacket=(232, 90, 140), 
 PINK = (255, 90, 150)
 
 
+def draw_tank(fr, x, y, s=1.0):
+    """Bonbonne de gaz metallique avec un gros noeud rose (offerte comme une dot)."""
+    d = ImageDraw.Draw(fr)
+    w, h = 90 * s, 300 * s
+    d.rounded_rectangle([x - w, y - h / 2, x + w, y + h / 2], int(70 * s), fill=(190, 196, 214), outline=INK, width=7)
+    d.rounded_rectangle([x - w + 18 * s, y - h / 2 + 30 * s, x - w + 40 * s, y + h / 2 - 30 * s], int(10 * s), fill=(240, 244, 255))
+    d.rounded_rectangle([x + w - 34 * s, y - h / 2 + 30 * s, x + w - 14 * s, y + h / 2 - 30 * s], int(10 * s), fill=(150, 156, 176))
+    d.chord([x - w, y - h / 2 - 2, x + w, y - h / 2 + 120 * s], 180, 360, fill=(60, 120, 230), outline=INK, width=7)
+    d.rectangle([x - 26 * s, y - h / 2 - 70 * s, x + 26 * s, y - h / 2 + 4], fill=(150, 156, 176), outline=INK, width=6)
+    d.rounded_rectangle([x - 50 * s, y - h / 2 - 96 * s, x + 50 * s, y - h / 2 - 66 * s], int(10 * s), fill=(60, 120, 230), outline=INK, width=6)
+    d.rectangle([x - w + 6, y - 40 * s, x + w - 6, y + 40 * s], fill=(255, 255, 255), outline=INK, width=5)
+    d.text((x, y), "AZOTE", font=font(int(46 * s)), fill=INK, anchor="mm")
+    for sx in (-1, 1):  # noeud rose
+        d.ellipse([x + sx * 70 * s - 48 * s, y - h / 2 + 10 * s, x + sx * 70 * s + 48 * s, y - h / 2 + 80 * s], fill=PINK, outline=INK, width=5)
+    d.ellipse([x - 22 * s, y - h / 2 + 24 * s, x + 22 * s, y - h / 2 + 66 * s], fill=(255, 140, 190), outline=INK, width=5)
+
+
 def heart(d, x, y, r, col=PINK, outline=True):
     if r < 12:  # trop petit pour etre dessine (debut d'animation)
         return
@@ -172,12 +189,8 @@ def A_gift(c):
     def front(fr, c):
         d = ImageDraw.Draw(fr)
         k = ease(lt / 0.6)
-        x, y = c["hx"] + 150 + 120 * k + 40, c["gy"] - 560
-        d.rectangle([x - 70, y - 60, x + 70, y + 60], fill=(140, 90, 230), outline=INK, width=6)
-        d.rectangle([x - 12, y - 60, x + 12, y + 60], fill=ACC)
-        d.rectangle([x - 70, y - 12, x + 70, y + 12], fill=ACC)
-        for sx in (-1, 1):
-            d.ellipse([x + sx * 40 - 30, y - 100, x + sx * 40 + 30, y - 56], outline=ACC, width=10)
+        x, y = c["hx"] + 150 + 120 * k + 60, c["gy"] - 560
+        draw_tank(fr, x, y)
         big_text(fr, x, y - 230, "?!", 110, eob((lt - 0.5) / 0.3), ang=8)
     return dict(hero=hero, hx=280, extras=[dict(x=800, style=GIRL, posefn=girl_pose("wow", lt), s=0.86)], front=front)
 
