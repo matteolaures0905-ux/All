@@ -1,0 +1,114 @@
+[
+ {
+  "start": 0.3,
+  "end": 2.22,
+  "scene": "cell",
+  "action": "count",
+  "text": "les jours se *RESSEMBLENT*"
+ },
+ {
+  "start": 2.27,
+  "end": 3.91,
+  "scene": "cell",
+  "action": "grip",
+  "text": "derrière les *BARREAUX*"
+ },
+ {
+  "start": 3.96,
+  "end": 6.06,
+  "scene": "interro",
+  "action": "interro",
+  "text": "ils veulent des *NOMS*"
+ },
+ {
+  "start": 6.11,
+  "end": 7.49,
+  "scene": "interro",
+  "action": "silent",
+  "text": "il dit *RIEN*"
+ },
+ {
+  "start": 7.54,
+  "end": 9.05,
+  "scene": "yard",
+  "action": "spot",
+  "text": "le projecteur *TOURNE*"
+ },
+ {
+  "start": 9.1,
+  "end": 10.91,
+  "scene": "roof",
+  "action": "envious",
+  "text": "des yeux dans le *NOIR*"
+ },
+ {
+  "start": 10.96,
+  "end": 13.22,
+  "scene": "cell",
+  "action": "idea",
+  "text": "un *PLAN* se dessine"
+ },
+ {
+  "start": 13.27,
+  "end": 14.88,
+  "scene": "cell",
+  "action": "dig",
+  "text": "il creuse en *SILENCE*"
+ },
+ {
+  "start": 14.93,
+  "end": 16.7,
+  "scene": "cell",
+  "action": "hourglass",
+  "text": "chaque seconde *COMPTE*"
+ },
+ {
+  "start": 16.75,
+  "end": 18.44,
+  "scene": "yard",
+  "action": "run",
+  "text": "c'est le *MOMENT*"
+ },
+ {
+  "start": 18.49,
+  "end": 21.08,
+  "scene": "roof",
+  "action": "time",
+  "text": "plus de temps à *PERDRE*"
+ },
+ {
+  "start": 21.13,
+  "end": 23.4,
+  "scene": "street",
+  "action": "phone",
+  "text": "le téléphone *SONNE*"
+ },
+ {
+  "start": 23.45,
+  "end": 24.85,
+  "scene": "street",
+  "action": "rumors",
+  "text": "tout le quartier *PARLE*"
+ },
+ {
+  "start": 24.9,
+  "end": 27.76,
+  "scene": "street",
+  "action": "alone",
+  "text": "caché sous la *PLUIE*"
+ },
+ {
+  "start": 27.81,
+  "end": 29.75,
+  "scene": "yard",
+  "action": "free",
+  "text": "enfin *LIBRE*"
+ },
+ {
+  "start": 29.8,
+  "end": 31.35,
+  "scene": "roof",
+  "action": "envious",
+  "text": "la nuit est à *LUI*"
+ }
+]
