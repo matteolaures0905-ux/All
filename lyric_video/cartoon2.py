@@ -536,6 +536,13 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         d.ellipse([px - S(8), py - S(8), px + S(8), py + S(8)], fill=(255, 240, 180))
     # ---- tete
     hood = pose.get("hood")
+    if st["hat"] == "long" and not hood:  # cheveux longs derriere la tete
+        sway = 6 * math.sin(t * 3 + phase)
+        d.rounded_rectangle([*P(-140, -860), *P(140, -700)], S(70), fill=st["hair"], outline=INK, width=lw)
+        for k in (-1, 1):  # deux meches qui tombent sur les epaules
+            x0 = 78 if k == 1 else -150
+            d.rounded_rectangle([*P(x0 + sway, -800), *P(x0 + 72 + sway, -455)], S(34), fill=st["hair"], outline=INK, width=lw)
+            d.line([P(x0 + 30 + sway, -700), P(x0 + 30 + sway, -490)], fill=shade(st["hair"], 1.4), width=S(6))
     if hood:
         d.ellipse([*P(-150, -870), *P(150, -560)], fill=st["jacket"], outline=INK, width=lw)
     d.rectangle([*P(-30, -610), *P(30, -560)], fill=st["skin_d"])
@@ -574,6 +581,10 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
             hx_, hy_ = P(x, -790 - (60 - abs(x) * 0.4))
             d.ellipse([hx_ - S(34), hy_ - S(34), hx_ + S(34), hy_ + S(34)], fill=st["hair"], outline=INK, width=S(4))
         d.chord([*P(-112, -840), *P(112, -700)], 180, 360, fill=st["hair"])
+    elif hat == "long":
+        d.chord([*P(-120, -860), *P(120, -660)], 180, 360, fill=st["hair"], outline=INK, width=lw)
+        d.pieslice([*P(-130, -830), *P(40, -680)], 180, 270, fill=st["hair"])   # meche sur le cote
+        d.arc([*P(-90, -850), *P(30, -720)], 200, 260, fill=shade(st["hair"], 1.4), width=S(8))
     elif hat == "short":
         d.chord([*P(-114, -840), *P(114, -700)], 180, 360, fill=st["hair"], outline=INK, width=lw)
     elif hat == "hood":
@@ -657,6 +668,14 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         a = (bx - S(26) * k, by + S(outer)) if k == 1 else (bx - S(26) * k, by + S(outer))
         b = (bx + S(4) * -k, by + S(inner))
         d.line([(bx + S(28) * k, by + S(outer)), (bx - S(20) * k, by + S(inner))], fill=st["hair"] if st["hair"] != INK else INK, width=S(11))
+    if st.get("earrings"):
+        for k in (-1, 1):
+            ex_, ey_ = P(114 * k, -650)
+            d.ellipse([ex_ - S(16), ey_ - S(4), ex_ + S(16), ey_ + S(30)], outline=ACC, width=S(6))
+    if st.get("lashes") and not blink:
+        for k in (-1, 1):
+            ex_, ey_ = P(40 * k, -695)
+            d.line([ex_ + S(22) * k, ey_ - S(20), ex_ + S(36) * k, ey_ - S(30)], fill=INK, width=S(6))
     # nez
     nx, ny = P(0, -660)
     d.arc([nx - S(14), ny - S(12), nx + S(14), ny + S(12)], 20, 160, fill=st["skin_d"], width=S(6))

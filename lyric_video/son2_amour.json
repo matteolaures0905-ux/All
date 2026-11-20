@@ -1,0 +1,114 @@
+[
+ {
+  "start": 0.3,
+  "end": 2.22,
+  "scene": "street",
+  "action": "gift",
+  "text": "un drôle de *CADEAU*"
+ },
+ {
+  "start": 2.27,
+  "end": 3.91,
+  "scene": "roof",
+  "action": "devil",
+  "text": "un petit diable s'en *MÊLE*"
+ },
+ {
+  "start": 3.96,
+  "end": 6.06,
+  "scene": "room",
+  "action": "doubt",
+  "text": "elle y croit *PAS*"
+ },
+ {
+  "start": 6.11,
+  "end": 7.49,
+  "scene": "alley",
+  "action": "scale",
+  "text": "les billets font *PENCHER*"
+ },
+ {
+  "start": 7.54,
+  "end": 9.05,
+  "scene": "room",
+  "action": "call5",
+  "text": "ça sonne avant *L'AUBE*"
+ },
+ {
+  "start": 9.1,
+  "end": 10.91,
+  "scene": "room",
+  "action": "spell",
+  "text": "elle est *ENVOÛTÉE*"
+ },
+ {
+  "start": 10.96,
+  "end": 13.22,
+  "scene": "street",
+  "action": "rush",
+  "text": "il fonce chez *ELLE*"
+ },
+ {
+  "start": 13.27,
+  "end": 14.88,
+  "scene": "room",
+  "action": "hearts",
+  "text": "les cœurs *EXPLOSENT*"
+ },
+ {
+  "start": 14.93,
+  "end": 16.7,
+  "scene": "alley",
+  "action": "zip",
+  "text": "capuche et *DOUDOUNE*"
+ },
+ {
+  "start": 16.75,
+  "end": 18.44,
+  "scene": "alley",
+  "action": "think",
+  "text": "elle dans sa *TÊTE*"
+ },
+ {
+  "start": 18.49,
+  "end": 21.08,
+  "scene": "roof",
+  "action": "think_phone",
+  "text": "même dans le *NOIR*"
+ },
+ {
+  "start": 21.13,
+  "end": 23.4,
+  "scene": "room",
+  "action": "argue",
+  "text": "ça *CLASHE* fort"
+ },
+ {
+  "start": 23.45,
+  "end": 24.85,
+  "scene": "street",
+  "action": "car",
+  "text": "le bolide *ORANGE*"
+ },
+ {
+  "start": 24.9,
+  "end": 27.76,
+  "scene": "street",
+  "action": "car_kiss",
+  "text": "bisou au *VOLANT*"
+ },
+ {
+  "start": 27.81,
+  "end": 29.75,
+  "scene": "street",
+  "action": "cash",
+  "text": "les poches *PLEINES*"
+ },
+ {
+  "start": 29.8,
+  "end": 31.35,
+  "scene": "roof",
+  "action": "cash_rain",
+  "text": "pluie de *BILLETS*"
+ }
+]
