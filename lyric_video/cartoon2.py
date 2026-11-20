@@ -441,6 +441,11 @@ HERO = dict(skin=(141, 90, 59), skin_d=(112, 68, 42), jacket=(28, 110, 140), jac
             sleeve=(242, 230, 207), sleeve_d=(214, 200, 176), cuff=(255, 122, 61), pants=(34, 32, 48),
             shoe=(250, 250, 250), sole=(190, 190, 205), shoe_acc=(255, 122, 61), hat="cap_back", glow=(255, 176, 20),
             hat_col=(255, 122, 61), hair=(26, 20, 16), chain=True, patch=True, tee=(250, 250, 250))
+HERO_DARK = dict(skin=(128, 80, 52), skin_d=(92, 56, 36), jacket=(26, 26, 32), jacket_d=(12, 12, 16),
+                 sleeve=(26, 26, 32), sleeve_d=(12, 12, 16), cuff=(18, 18, 22), pants=(18, 18, 24),
+                 shoe=(30, 30, 36), sole=(60, 60, 70), shoe_acc=(255, 176, 20), hat="cap_back", glow=(255, 176, 20),
+                 hat_col=(34, 34, 42), hair=(16, 12, 10), chain=True, patch=True, tee=(20, 20, 24),
+                 puffer=True, gloss=(105, 110, 135), brooding=True)
 FRIEND = dict(skin=(224, 172, 130), skin_d=(196, 140, 100), jacket=(80, 170, 90), jacket_d=(58, 136, 70),
               sleeve=(80, 170, 90), sleeve_d=(58, 136, 70), cuff=(58, 136, 70), pants=(70, 80, 120),
               shoe=(40, 40, 50), sole=(230, 230, 230), shoe_acc=(250, 250, 250), hat="curly",
@@ -503,24 +508,30 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         d.line([fx - S(30), fy, fx + S(30), fy - S(10)], fill=st["shoe_acc"], width=S(10))
     # ---- buste
     x0, y0 = P(-122, -575); x1, y1 = P(122, -248)
-    d.rounded_rectangle([x0, y0, x1, y1], S(64), fill=st["jacket"], outline=INK, width=lw)
-    d.rounded_rectangle([P(60, -560)[0], P(60, -560)[1], P(112, -262)[0], P(112, -262)[1]], S(40), fill=st["jacket_d"])
-    d.rounded_rectangle([x0, y0, x1, y1], S(64), outline=INK, width=lw)
-    d.rounded_rectangle([*P(-118, -290), *P(118, -248)], S(18), fill=st["cuff"], outline=INK, width=S(5))
-    d.line([P(-110, -270), P(110, -270)], fill=shade(st["cuff"], 0.75), width=S(5))
-    d.chord([*P(-58, -600), *P(58, -500)], 0, 180, fill=st["tee"], outline=INK, width=S(5))
-    d.line([P(0, -505), P(0, -290)], fill=INK, width=S(5))
-    if st.get("patch"):
+    if st.get("puffer"):
+        draw_puffer_torso(d, P, S, st, lw)
+    else:
+        d.rounded_rectangle([x0, y0, x1, y1], S(64), fill=st["jacket"], outline=INK, width=lw)
+        d.rounded_rectangle([P(60, -560)[0], P(60, -560)[1], P(112, -262)[0], P(112, -262)[1]], S(40), fill=st["jacket_d"])
+        d.rounded_rectangle([x0, y0, x1, y1], S(64), outline=INK, width=lw)
+        d.rounded_rectangle([*P(-118, -290), *P(118, -248)], S(18), fill=st["cuff"], outline=INK, width=S(5))
+        d.line([P(-110, -270), P(110, -270)], fill=shade(st["cuff"], 0.75), width=S(5))
+        d.chord([*P(-58, -600), *P(58, -500)], 0, 180, fill=st["tee"], outline=INK, width=S(5))
+        d.line([P(0, -505), P(0, -290)], fill=INK, width=S(5))
+    if st.get("patch") and not st.get("puffer"):
         px, py = P(-62, -440)
         pts = [(px + S(34) * math.cos(math.radians(-90 + i * 36)) * (1 if i % 2 == 0 else 0.45),
                 py + S(34) * math.sin(math.radians(-90 + i * 36)) * (1 if i % 2 == 0 else 0.45)) for i in range(10)]
         d.polygon(pts, fill=ACC, outline=INK)
         d.rounded_rectangle([*P(30, -370), *P(95, -330)], S(8), fill=st["jacket_d"], outline=INK, width=S(4))
+    if st.get("puffer"):
+        pass
     if st.get("chain"):
-        pts = [P(52 * math.cos(a), -560 + 66 * math.sin(a)) for a in np.linspace(0.15, math.pi - 0.15, 14)]
+        cyc = -545 if st.get("puffer") else -560
+        pts = [P(52 * math.cos(a), cyc + 66 * math.sin(a)) for a in np.linspace(0.15, math.pi - 0.15, 14)]
         for (px, py) in pts:
             d.ellipse([px - S(7), py - S(7), px + S(7), py + S(7)], fill=ACC, outline=INK, width=S(2))
-        px, py = P(0, -478)
+        px, py = P(0, -478 + (15 if st.get("puffer") else 0))
         d.ellipse([px - S(20), py - S(20), px + S(20), py + S(20)], fill=ACC, outline=INK, width=S(4))
         d.ellipse([px - S(8), py - S(8), px + S(8), py + S(8)], fill=(255, 240, 180))
     # ---- tete
@@ -533,6 +544,8 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         d.ellipse([ex_ - S(22), ey_ - S(28), ex_ + S(22), ey_ + S(28)], fill=st["skin"], outline=INK, width=S(5))
     d.ellipse([*P(-112, -830), *P(112, -585)], fill=st["skin"], outline=INK, width=lw)
     d.chord([*P(-112, -830), *P(112, -585)], 20, 160, fill=st["skin"])
+    if st.get("brooding"):
+        d.chord([*P(-108, -826), *P(108, -590)], 195, 345, fill=st["skin_d"])
     d.arc([*P(-112, -830), *P(112, -585)], 0, 360, fill=INK, width=lw)
     hat = "hood" if hood else st["hat"]
     if hat == "beanie":
@@ -626,7 +639,9 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         if sleepy:
             d.chord([ex_ - S(26), ey_ - S(30), ex_ + S(26), ey_ + S(26)], 180, 360, fill=st["skin"], outline=INK, width=S(5))
     # sourcils
-    brows = pose.get("brows", "neutral")
+    brows = pose.get("brows", "angry" if st.get("brooding") else "neutral")
+    if st.get("brooding") and brows == "neutral":
+        brows = "angry"
     for k in (-1, 1):
         bx, by = P(40 * k, -745)
         inner, outer = 0, 0
@@ -687,6 +702,17 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         for w_, col in ((S(68), INK), (S(54), st["sleeve"])):
             d.line([A, B], fill=col, width=w_); d.line([B, C], fill=col, width=w_)
             d.ellipse([B[0] - w_ / 2, B[1] - w_ / 2, B[0] + w_ / 2, B[1] + w_ / 2], fill=col)
+        if st.get("puffer"):
+            for w_, col in ((S(84), INK), (S(70), st["sleeve"])):
+                d.line([A, B], fill=col, width=w_); d.line([B, C], fill=col, width=w_)
+                d.ellipse([B[0] - w_ / 2, B[1] - w_ / 2, B[0] + w_ / 2, B[1] + w_ / 2], fill=col)
+            for (P1, P2) in ((A, B), (B, C)):
+                vx, vy = P2[0] - P1[0], P2[1] - P1[1]
+                nn = math.hypot(vx, vy) or 1
+                for f in (0.33, 0.66):
+                    mx_, my_ = P1[0] + vx * f, P1[1] + vy * f
+                    d.line([mx_ - vy / nn * S(36), my_ + vx / nn * S(36), mx_ + vy / nn * S(36), my_ - vx / nn * S(36)], fill=INK, width=S(5))
+                d.line([P1[0] + vx * 0.1 - vy / nn * S(18), P1[1] + vy * 0.1 + vx / nn * S(18), P1[0] + vx * 0.28 - vy / nn * S(18), P1[1] + vy * 0.28 + vx / nn * S(18)], fill=st.get("gloss", (95, 100, 120)), width=S(7))
         d.ellipse([A[0] - S(34), A[1] - S(34), A[0] + S(34), A[1] + S(34)], fill=st["sleeve"], outline=INK, width=lw)
         # manchette
         ux, uy = C[0] - B[0], C[1] - B[1]
@@ -709,6 +735,27 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
         if prop:
             prop(frame, C, s, t)
             d = ImageDraw.Draw(frame)
+
+
+def draw_puffer_torso(d, P, S, st, lw):
+    """Doudoune matelassee : boudins horizontaux brillants, col montant, zip."""
+    j, jd, hi = st["jacket"], st["jacket_d"], st.get("gloss", (95, 100, 120))
+    rows = [(-585, -520, 138), (-525, -460, 146), (-465, -400, 150), (-405, -340, 148), (-345, -285, 142)]
+    for (ya, yb, wdt) in rows:
+        d.rounded_rectangle([*P(-wdt, ya), *P(wdt, yb)], S(34), fill=j, outline=INK, width=lw)
+        d.rounded_rectangle([*P(wdt - 46, ya + 8), *P(wdt - 8, yb - 8)], S(18), fill=jd)
+        d.line([P(-wdt + 34, ya + 16), P(-wdt + 110, ya + 13)], fill=hi, width=S(8))   # reflet brillant
+        d.line([P(10, ya + 15), P(46, ya + 14)], fill=hi, width=S(6))
+    d.rounded_rectangle([*P(-128, -298), *P(128, -248)], S(18), fill=jd, outline=INK, width=S(5))  # bas elastique
+    # col montant
+    d.rounded_rectangle([*P(-78, -640), *P(78, -560)], S(30), fill=j, outline=INK, width=lw)
+    d.line([P(-50, -625), P(-10, -628)], fill=hi, width=S(6))
+    d.line([P(0, -640), P(0, -252)], fill=INK, width=S(6))                         # zip
+    d.rounded_rectangle([*P(-9, -602), *P(9, -570)], S(4), fill=ACC, outline=INK, width=S(3))
+    if st.get("patch"):  # petit logo ambre sur la poitrine
+        cx, cy = P(-70, -430)
+        d.ellipse([cx - S(18), cy - S(18), cx + S(18), cy + S(18)], fill=INK, outline=ACC, width=S(4))
+        d.polygon([(cx, cy - S(11)), (cx + S(9), cy + S(8)), (cx - S(9), cy + S(8))], fill=ACC)
 
 
 def draw_cap_back(frame, center, s, hc, hair, t):
@@ -775,7 +822,9 @@ def bubble(d, x, y, k, w=240, h=130, col=(255, 255, 255), line=(60, 50, 80), fac
     if face:
         cx, cy, r = x + w / 2, y + h / 2 + 6 * k, 36 * k
         d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=face["skin"], outline=INK, width=4)
-        if face["hat"] == "beanie":
+        if face["hat"] in ("cap_back", "cap"):
+            d.chord([cx - r - 2, cy - r - 12 * k, cx + r + 2, cy + r * 0.25], 180, 360, fill=face["hat_col"], outline=INK, width=4)
+        elif face["hat"] == "beanie":
             d.chord([cx - r - 2, cy - r - 14 * k, cx + r + 2, cy + r * 0.3], 180, 360, fill=face["hat_col"], outline=INK, width=4)
         else:
             for dx in (-0.6, 0, 0.6):
@@ -789,6 +838,7 @@ def bubble(d, x, y, k, w=240, h=130, col=(255, 255, 255), line=(60, 50, 80), fac
 
 
 HIDE_SCENE_TEXT = [False]
+ACTIVE = [None]
 
 
 def big_text(frame, x, y, txt, size, k=1.0, ang=0, col=ACC):
@@ -978,7 +1028,7 @@ def A_whisper(c):
     def front(fr, c):
         d = ImageDraw.Draw(fr)
         for i in range(3):
-            bubble(d, 480 + i * 170, c["gy"] - 1000 - (i % 2) * 90, eob((lt - 0.15 - i * 0.3) / 0.3), 170, 120, face=HERO)
+            bubble(d, 480 + i * 170, c["gy"] - 1000 - (i % 2) * 90, eob((lt - 0.15 - i * 0.3) / 0.3), 170, 120, face=ACTIVE[0])
     return dict(hero=hero, hx=230, extras=extras, front=front)
 
 
@@ -990,7 +1040,7 @@ def A_friend_with(c):
     def front(fr, c):
         d = ImageDraw.Draw(fr)
         for i in range(2):
-            bubble(d, 420 + i * 260, c["gy"] - 1020 - i * 70, eob((lt - 0.3 - i * 0.3) / 0.3), 180, 125, face=HERO)
+            bubble(d, 420 + i * 260, c["gy"] - 1020 - i * 70, eob((lt - 0.3 - i * 0.3) / 0.3), 180, 125, face=ACTIVE[0])
     return dict(hero=None, extras=extras, front=front)
 
 
@@ -1403,8 +1453,11 @@ def main():
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--out", default="video_cartoon2.mp4")
     ap.add_argument("--stills", help="liste de temps -> planche PNG")
+    ap.add_argument("--hero", default="classic", choices=["classic", "dark"])
+    ap.add_argument("--night", action="store_true", help="etalonnage nocturne des decors")
     a = ap.parse_args()
     fps, dur = a.fps, a.duration
+    ACTIVE[0] = HERO_DARK if a.hero == "dark" else HERO
 
     lines = load_lyrics(a.lyrics, a.start)
     raw = json.load(open(a.lyrics, encoding="utf-8"))
@@ -1426,6 +1479,15 @@ def main():
                 a_ = 1.0 if y < 360 else max(0, 1 - (y - 360) / 260) ** 1.3
                 od.line([0, y, W, y], fill=tint + (int(250 * a_),))
             img = Image.alpha_composite(img, ov)
+            if a.night:  # nuit : on assombrit et on bleuit, mais les lumieres (neons, fenetres) restent vives
+                f = np.asarray(img.convert("RGB")).astype(np.float32)
+                lum = f.mean(2, keepdims=True) / 255
+                keep = np.clip((lum - 0.62) / 0.3, 0, 1) * (f.max(2, keepdims=True) - f.min(2, keepdims=True) > 60)
+                night = f * np.array([0.42, 0.42, 0.62]) + np.array([6, 4, 22])
+                f = night * (1 - keep) + f * keep
+                yy = np.linspace(-1, 1, H)[:, None, None]; xx = np.linspace(-1, 1, W)[None, :, None]
+                f *= 1 - 0.35 * np.clip((xx ** 2 + yy ** 2) - 0.3, 0, 1)
+                img = Image.fromarray(np.clip(f, 0, 255).astype(np.uint8)).convert("RGBA")
             arr = np.asarray(img.convert("RGB")).astype(np.int16)
             arr += np.random.default_rng(len(cache)).integers(-6, 7, (H, W, 1))
             cache[scene] = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert("RGBA")
@@ -1467,7 +1529,7 @@ def main():
             pose.setdefault("talk", talk)
             if pose.get("mouth") in ("smile", "frown", "flat", "o") and talk > 0.3:
                 pass
-            draw_person(frame, hx, cfg.get("hero_gy", gy), t, HERO, pose, s=0.92 * cfg.get("hero_s", 1.0))
+            draw_person(frame, hx, cfg.get("hero_gy", gy), t, ACTIVE[0], pose, s=0.92 * cfg.get("hero_s", 1.0))
         if cfg.get("front"):
             cfg["front"](frame, c)
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); ld = ImageDraw.Draw(lay)
