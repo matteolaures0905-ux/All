@@ -353,6 +353,73 @@ def A_think(c, phone=False):
     return dict(hero=hero, hx=330, front=front)
 
 
+def draw_reaper(fr, x, y, s, t):
+    """Faucheuse originale : grande robe a capuche dechiree, crane, yeux rouges, faux."""
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    sway = 14 * math.sin(t * 2)
+    robe = [(x - 90 * s, y - 520 * s), (x + 90 * s, y - 520 * s), (x + 230 * s + sway, y)]
+    for i in range(7):  # bas dechire
+        xx = x + 230 * s - i * (460 * s / 6) + sway
+        robe.append((xx, y + (40 if i % 2 else -10) * s))
+    robe.append((x - 230 * s + sway, y))
+    d.polygon(robe, fill=(14, 12, 22, 235), outline=INK + (255,))
+    d.ellipse([x - 120 * s, y - 700 * s, x + 120 * s, y - 440 * s], fill=(14, 12, 22, 245), outline=INK + (255,), width=6)
+    d.ellipse([x - 75 * s, y - 640 * s, x + 75 * s, y - 480 * s], fill=(4, 4, 8, 255))
+    d.ellipse([x - 55 * s, y - 630 * s, x + 55 * s, y - 520 * s], fill=(226, 220, 204, 255), outline=INK + (255,), width=4)
+    d.rectangle([x - 30 * s, y - 530 * s, x + 30 * s, y - 495 * s], fill=(226, 220, 204, 255), outline=INK + (255,), width=3)
+    for k in range(-2, 3):
+        d.line([x + k * 11 * s, y - 530 * s, x + k * 11 * s, y - 497 * s], fill=INK + (255,), width=3)
+    for k in (-1, 1):
+        d.ellipse([x + k * 24 * s - 16 * s, y - 600 * s, x + k * 24 * s + 16 * s, y - 566 * s], fill=(10, 0, 0, 255))
+        d.ellipse([x + k * 24 * s - 7 * s, y - 590 * s, x + k * 24 * s + 7 * s, y - 576 * s], fill=(255, 40, 50, 255))
+    d.polygon([(x - 6 * s, y - 560 * s), (x + 6 * s, y - 560 * s), (x, y - 545 * s)], fill=INK + (255,))
+    # faux
+    d.line([x + 170 * s, y - 900 * s, x + 120 * s, y - 40 * s], fill=INK + (255,), width=int(22 * s))
+    d.line([x + 170 * s, y - 900 * s, x + 120 * s, y - 40 * s], fill=(110, 76, 50, 255), width=int(12 * s))
+    blade = [(x + 172 * s, y - 900 * s), (x - 140 * s, y - 960 * s), (x - 300 * s, y - 860 * s), (x - 80 * s, y - 900 * s), (x + 165 * s, y - 860 * s)]
+    d.polygon(blade, fill=(200, 206, 222, 255), outline=INK + (255,))
+    d.line([(x - 280 * s, y - 866 * s), (x - 120 * s, y - 930 * s)], fill=(255, 255, 255, 255), width=5)
+    glow_l = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(glow_l).ellipse([x - 70 * s, y - 640 * s, x + 70 * s, y - 540 * s], fill=(255, 30, 40, int(90 + 80 * C.VOC[0])))
+    fr.alpha_composite(glow_l.filter(ImageFilter.GaussianBlur(20)))
+    fr.alpha_composite(lay)
+
+
+def skull_box(d, x, y, k=1.0):
+    d.rounded_rectangle([x - 50 * k, y - 36 * k, x + 50 * k, y + 36 * k], int(8 * k), fill=(20, 18, 26), outline=INK, width=5)
+    d.ellipse([x - 20 * k, y - 26 * k, x + 20 * k, y + 8 * k], fill=(236, 230, 214))
+    d.rectangle([x - 11 * k, y + 4 * k, x + 11 * k, y + 18 * k], fill=(236, 230, 214))
+    for e in (-1, 1):
+        d.ellipse([x + e * 9 * k - 6 * k, y - 14 * k, x + e * 9 * k + 6 * k, y - 2 * k], fill=INK)
+
+
+def A_reaper(c):
+    lt = c["lt"]
+    give = ease((lt - 0.3) / 0.5)
+    def hero(t, talk):
+        p = default_pose(t, talk)
+        p.update(lh=(-160 - 120 * give, -420), lh_shape="open", look=(-1, 0), brows="angry", mouth="flat" if talk < 0.25 else "talk", hood=True)
+        return p
+    def back(fr, c):
+        fr.alpha_composite(Image.new("RGBA", (W, H), (20, 0, 10, 90)))
+        draw_reaper(fr, 800, c["gy"] - 10, 1.18, c["t"])
+    def front(fr, c):
+        d = ImageDraw.Draw(fr)
+        hx_, hy_ = c["hx"] - 0.92 * (160 + 120 * give), c["gy"] - 0.92 * 420
+        skull_box(d, hx_ - 50, hy_ - 60, 1.7)
+        reach = ease((lt - 0.2) / 0.6)
+        for i, yy in enumerate((hy_ - 140, hy_ + 40)):  # mains d'ombre qui sortent du noir
+            x1 = -40 + (hx_ - 120) * reach * (0.85 + 0.1 * i)
+            for col, wd, fw in (((170, 90, 255), 58, 20), ((10, 6, 18), 44, 11)):
+                d.line([(-60, yy + 60), (x1, yy)], fill=col, width=wd)
+                for f in range(4):
+                    d.line([(x1, yy), (x1 + 46, yy - 34 + f * 22)], fill=col, width=fw)
+        # il pense a elle : bulle de pensee
+        A_think(c)["front"](fr, c)
+    return dict(hero=hero, hx=420, back=back, front=front)
+
+
 def A_argue(c):
     lt = c["lt"]
     def hero(t, talk):
@@ -436,7 +503,7 @@ def A_cash(c, rain=False):
     return dict(hero=hero, hx=300, extras=[girl], front=front2)
 
 
-C.ACTIONS.update(gift=A_gift, devil=A_devil, doubt=A_doubt, scale=A_scale, call5=A_call5, spell=A_spell, rush=A_rush,
+C.ACTIONS.update(reaper=A_reaper, gift=A_gift, devil=A_devil, doubt=A_doubt, scale=A_scale, call5=A_call5, spell=A_spell, rush=A_rush,
                  hearts=A_hearts, zip=A_zip, think=A_think, think_phone=lambda c: A_think(c, phone=True), argue=A_argue,
                  car=A_car, car_kiss=lambda c: A_car(c, kiss=True), cash=A_cash, cash_rain=lambda c: A_cash(c, rain=True))
 
