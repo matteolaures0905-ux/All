@@ -18,6 +18,8 @@ PINK = (255, 90, 150)
 
 
 def heart(d, x, y, r, col=PINK, outline=True):
+    if r < 12:  # trop petit pour etre dessine (debut d'animation)
+        return
     d.ellipse([x - r, y - r, x, y], fill=col, outline=INK if outline else None, width=4)
     d.ellipse([x, y - r, x + r, y], fill=col, outline=INK if outline else None, width=4)
     d.polygon([(x - r + 2, y - r * 0.4), (x + r - 2, y - r * 0.4), (x, y + r)], fill=col, outline=INK if outline else None)
