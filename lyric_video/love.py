@@ -95,10 +95,10 @@ def calendar(fr, x, y, k, circled):
         d.arc([cx_ - 46 * k, cy_ - 40 * k, cx_ + 46 * k, cy_ + 40 * k], 0, 360 * circled, fill=(220, 40, 60), width=int(10 * k))
 
 
-def supercar(fr, x, y, s=1.0, glow_on=True):
-    """Voiture de sport orange en coin (design original)."""
+def supercar(fr, x, y, s=1.0, glow_on=True, col=(255, 130, 30)):
+    """Voiture de sport en coin (design original)."""
     d = ImageDraw.Draw(fr)
-    org, dk = (255, 130, 30), (200, 90, 10)
+    org, dk = col, shade(col, 0.75)
     if glow_on:
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         ImageDraw.Draw(lay).polygon([(x + 400 * s, y - 70 * s), (W + 300, y - 260 * s), (W + 300, y + 120 * s)], fill=(255, 250, 200, 70))
