@@ -147,6 +147,56 @@ def duffel(d, x, y, open_k=0.0):
     d.line([x - 150, y - 50, x - 60, y - 70], fill=(80, 84, 100), width=6)
 
 
+def shell(d, x, y, ang, s=1.0):
+    """Cartouche de fusil a pompe : tube rouge + culot laiton."""
+    ca, sa = math.cos(ang), math.sin(ang)
+    def R(px, py):
+        return (x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s)
+    d.polygon([R(-14, -40), R(14, -40), R(14, 22), R(-14, 22)], fill=(210, 30, 45), outline=INK)
+    d.line([R(-6, -34), R(-6, 16)], fill=(255, 120, 130), width=max(2, int(5 * s)))
+    d.polygon([R(-16, 22), R(16, 22), R(16, 42), R(-16, 42)], fill=(230, 180, 60), outline=INK)
+    d.line([R(-16, 30), R(16, 30)], fill=(170, 120, 30), width=3)
+    d.line([R(-14, -40), R(14, -40)], fill=(150, 20, 30), width=4)
+
+
+def pump_gun(d, x, y, s=1.0):
+    """Fusil a pompe pose a plat (dessin cartoon)."""
+    def r(a, b, c_, e, fill, rad=6):
+        d.rounded_rectangle([x + a * s, y + b * s, x + c_ * s, y + e * s], int(rad * s), fill=fill, outline=INK, width=max(3, int(5 * s)))
+    wood, wood_d, metal, metal_d = (150, 92, 50), (116, 68, 36), (70, 74, 86), (44, 46, 56)
+    r(-60, -10, 360, 14, metal)                     # canon
+    r(-40, 16, 300, 34, metal_d)                     # tube magasin
+    r(110, 8, 250, 46, wood, 12)                      # pompe
+    for k in range(5):
+        d.line([x + (130 + k * 24) * s, y + 14 * s, x + (130 + k * 24) * s, y + 40 * s], fill=wood_d, width=max(2, int(4 * s)))
+    r(-200, -24, -40, 40, metal)                     # carcasse
+    d.ellipse([x - 150 * s, y - 4 * s, x - 120 * s, y + 20 * s], fill=metal_d, outline=INK, width=3)
+    d.arc([x - 190 * s, y + 26 * s, x - 120 * s, y + 90 * s], 0, 180, fill=INK, width=max(3, int(7 * s)))   # pontet
+    d.polygon([(x - 200 * s, y - 20 * s), (x - 420 * s, y + 10 * s), (x - 430 * s, y + 90 * s), (x - 190 * s, y + 40 * s)], fill=wood, outline=INK)  # crosse
+    d.line([(x - 260 * s, y + 6 * s), (x - 400 * s, y + 30 * s)], fill=(190, 130, 80), width=max(2, int(6 * s)))
+    d.rounded_rectangle([x - 440 * s, y + 4 * s, x - 418 * s, y + 96 * s], int(6 * s), fill=(30, 30, 36), outline=INK, width=3)
+    d.ellipse([x + 340 * s, y - 20 * s, x + 352 * s, y - 8 * s], fill=(230, 230, 240))                    # guidon
+    d.line([x - 50 * s, y - 4 * s, x + 340 * s, y - 4 * s], fill=(130, 136, 152), width=max(2, int(4 * s)))  # reflet
+
+
+def open_bag(d, x, y, t):
+    """Sac de sport ouvert, rempli de cartouches."""
+    d.rounded_rectangle([x - 200, y - 90, x + 200, y + 100], 60, fill=(26, 26, 32), outline=INK, width=LW)
+    d.ellipse([x - 170, y - 120, x + 170, y - 40], fill=(8, 8, 12), outline=INK, width=6)
+    rnd = random.Random(7)
+    for i in range(11):  # cartouches qui depassent de l'ouverture
+        sx = x - 140 + i * 28 + rnd.randint(-6, 6)
+        sy = y - 100 + rnd.randint(-14, 10)
+        shell(d, sx, sy, math.radians(rnd.randint(-30, 30)), 0.9)
+    for k in (-1, 1):  # fermeture eclair ouverte
+        d.line([x + k * 175, y - 70, x + k * 120, y - 112], fill=ACC, width=8)
+    d.arc([x - 110, y - 230, x + 110, y - 70], 200, 340, fill=INK, width=18)
+    d.arc([x - 110, y - 230, x + 110, y - 70], 200, 340, fill=(50, 50, 60), width=10)
+    d.rounded_rectangle([x - 60, y + 10, x + 60, y + 60], 10, fill=(40, 40, 50), outline=(90, 90, 110), width=4)
+    for i, (dx, dy, a) in enumerate(((-260, 70, 80), (240, 85, -70), (290, 60, 100))):  # quelques cartouches tombees
+        shell(d, x + dx, y + dy, math.radians(a), 0.9)
+
+
 def police_lights(fr, t, strength=1.0):
     lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     ld = ImageDraw.Draw(lay)
@@ -324,14 +374,15 @@ def P(**kw):
     return f
 
 
-def A1(c):  # le sac
+def A1(c):  # le sac de cartouches + le fusil a pompe sur le capot
     lt = c["lt"]
     def back(fr, c):
         L.supercar(fr, 620, c["gy"] - 320, 0.95, col=(40, 120, 200))
+        glow(fr, 700, c["gy"] - 640, 150, ACC, int(60 + 100 * C.VOC[0]))
         d = ImageDraw.Draw(fr)
-        duffel(d, 640, c["gy"] - 640, ease(lt / 0.8))
-        glow(fr, 640, c["gy"] - 700, 120, ACC, int(60 + 120 * C.VOC[0]))
-    return dict(hero=P(rh=(300, -600), rh_shape="fist", look=(1, 0), brows="angry", mouth="flat"), hx=260, back=back)
+        open_bag(d, 760, c["gy"] - 610, c["t"])
+        pump_gun(d, 600, c["gy"] - 455, 0.78)
+    return dict(hero=P(lh=(70, -430), rh=(-70, -415), look=(1, 0.5), brows="angry", mouth="flat", shades=0), hx=200, back=back)
 
 
 def A2(c):  # sirenes : c'est le rival qui cavale, le heros reste calme
