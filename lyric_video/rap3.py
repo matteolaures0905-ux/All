@@ -334,22 +334,24 @@ def A1(c):  # le sac
     return dict(hero=P(rh=(300, -600), rh_shape="fist", look=(1, 0), brows="angry", mouth="flat"), hx=260, back=back)
 
 
-def A2(c):  # sirenes, il cavale
+def A2(c):  # sirenes : c'est le rival qui cavale, le heros reste calme
     lt = c["lt"]
-    hx = -100 + 900 * ease(lt / 1.8)
-    def hero(t, talk):
+    rx = 1150 - 1350 * ease(lt / 1.8)
+    def rival(t, talk):
         sw = math.sin(t * 16)
-        p = default_pose(t, talk)
+        p = default_pose(t, 0, 1)
         p.update(walk=1.4, lh=(-170 + 90 * sw, -380), rh=(170 - 90 * sw, -380), look=(-1, 0), brows="up", mouth="o", bob=8 * abs(sw))
         return p
+    def back(fr, c):
+        police_lights(fr, c["t"], 0.7)
     def front(fr, c):
-        police_lights(fr, c["t"])
         d = ImageDraw.Draw(fr)
-        for i in range(5):
+        for i in range(5):  # traits de vitesse derriere le rival
             y = c["gy"] - 200 - i * 110
-            d.line([hx - 360 - i * 25, y, hx - 170, y], fill=(255, 255, 255), width=6)
-        big_text(fr, 820, c["gy"] - 1080, "WIOU WIOU", 80, eob((lt - 0.2) / 0.3), ang=8, col=(120, 170, 255))
-    return dict(hero=hero, hx=hx, front=front)
+            d.line([rx + 170, y, rx + 360 + i * 25, y], fill=(255, 255, 255), width=6)
+        big_text(fr, 760, c["gy"] - 1080, "WIOU WIOU", 80, eob((lt - 0.2) / 0.3), ang=8, col=(120, 170, 255))
+    return dict(hero=P(lh=(70, -430), rh=(-70, -415), shades=1, mouth="smirk", look=(1, 0)), hx=230,
+                extras=[dict(x=rx, style=RIVAL, posefn=rival, s=0.86)], back=back, front=front)
 
 
 def A3(c):  # les comptes au stylo
@@ -371,7 +373,7 @@ def A4(c):  # chiffres en baisse, rival enerve
     lt = c["lt"]
     def rival(t, talk):
         p = default_pose(t, 0, 1)
-        p.update(lh=(-120, -720), rh=(120, -720), lh_shape="fist", rh_shape="fist", brows="angry", mouth="frown", eyes="closed", bob=6 * math.sin(t * 20))
+        p.update(lh=(-120, -720), rh=(120, -720), lh_shape="fist", rh_shape="fist", brows="angry", mouth="frown", eyes="closed")
         return p
     def front(fr, c):
         chart_down(fr, 330, 760, ease(lt / 0.8))

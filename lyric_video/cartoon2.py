@@ -596,7 +596,7 @@ def draw_person(frame, cx, gy, t, st, pose, s=1.0, phase=0.0):
     glows = []
     if st.get("glow") and not blink and pose.get("shades", 0) < 0.9:
         gc = st["glow"]
-        pulse = 0.65 + 0.35 * VOC[0] + 0.4 * VOC[1]
+        pulse = 0.75 + 0.25 * VOC[0]
         for k in (-1, 1):
             gx_, gy_ = P(40 * k, -695)
             for rad, al, bl in ((S(95), int(80 * pulse), 0.45), (S(55), int(190 * pulse), 0.3)):
@@ -1525,6 +1525,8 @@ def main():
     talk_env = np.convolve(rms, np.ones(3) / 3, "same")
     venv, vflash, onsets = (vocal_features(a.audio, a.start, dur, fps) if a.audio else (np.zeros(int(dur * fps)), np.zeros(int(dur * fps)), []))
     talk_env = 0.4 * talk_env + 0.6 * venv
+    venv = np.convolve(venv, np.ones(9) / 9, "same")  # lumieres sans a-coups
+    vflash = vflash * 0
     for l in lines:  # chaque mot du sous-titre apparait sur une attaque de la voix
         ws = [w for w in l["words"] if w["text"]]
         on = [o for o in onsets if l["start"] - 0.05 <= o < l["end"] - 0.25]
@@ -1578,7 +1580,7 @@ def main():
         fi_ = min(fi, len(venv) - 1)
         VOC[0], VOC[1] = float(venv[fi_]), float(vflash[fi_])
         base, gl = lights[scene]
-        inten = 0.15 + 0.9 * VOC[0] + 1.3 * VOC[1]
+        inten = 0.25 + 0.75 * VOC[0]
         frame = Image.fromarray(np.clip(base + gl * inten, 0, 255).astype(np.uint8)).convert("RGBA")
         lt = t - (line["start"] - 0.25)
         p = float(pulse[min(fi, len(pulse) - 1)])
@@ -1614,12 +1616,9 @@ def main():
             yy = (y - v * t) % H
             ld.ellipse([x - r, yy - r, x + r, yy + r], fill=(255, 255, 255, 60))
         frame.alpha_composite(lay)
-        if VOC[1] > 0.3:
-            fl = Image.new("RGBA", (W, H), (255, 190, 90, int(38 * VOC[1])))
-            frame.alpha_composite(fl)
-        z = 1.0 + 0.035 * min(1, lt / 4) + 0.02 * p + (0.05 * (1 - lt / 0.2) if lt < 0.2 else 0)
+        z = 1.0 + 0.035 * min(1, lt / 4)  # zoom lent uniquement : plus de secousse ni de coup de zoom
         cw, ch = int(W / z), int(H / z)
-        ox = (W - cw) // 2 + int(6 * p * math.sin(t * 50))
+        ox = (W - cw) // 2
         oy = int((H - ch) * 0.6)
         frame = frame.crop((ox, oy, ox + cw, oy + ch)).resize((W, H), Image.BILINEAR)
         for l in lines:
