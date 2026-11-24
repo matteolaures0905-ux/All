@@ -852,6 +852,226 @@ def A22(c):  # le pont cede
     return dict(hero=P(rh=(220, -600), rh_shape="fist", brows="angry", mouth="smirk", shades=1, look=(1, 0)), hx=140, hero_s=0.62, extras=extras, back=back, front=front)
 
 
+
+# ====================================================================== v2 : voiture et pont plus detailles
+def rim(d, x, y, r, rot):
+    d.ellipse([x - r, y - r, x + r, y + r], fill=(18, 18, 22), outline=INK, width=5)            # pneu
+    d.ellipse([x - r * 0.72, y - r * 0.72, x + r * 0.72, y + r * 0.72], fill=(190, 196, 210), outline=INK, width=4)
+    d.arc([x - r * 0.62, y - r * 0.62, x + r * 0.62, y + r * 0.62], 200, 250, fill=(255, 210, 40), width=int(r * 0.2))  # etrier
+    for i in range(10):
+        a = rot + i * math.tau / 10
+        d.line([x + r * 0.15 * math.cos(a), y + r * 0.15 * math.sin(a), x + r * 0.68 * math.cos(a), y + r * 0.68 * math.sin(a)], fill=(110, 116, 132), width=max(3, int(r * 0.08)))
+    d.ellipse([x - r * 0.16, y - r * 0.16, x + r * 0.16, y + r * 0.16], fill=(60, 62, 72), outline=INK, width=3)
+    d.arc([x - r * 0.62, y - r * 0.62, x + r * 0.62, y + r * 0.62], 220, 260, fill=(255, 255, 255), width=4)
+
+
+def head_in_car(d, x, y, st, s, look=1):
+    d.ellipse([x - 44 * s, y - 50 * s, x + 44 * s, y + 46 * s], fill=st["skin"], outline=INK, width=4)
+    if st.get("hat") in ("cap_back", "cap"):
+        d.chord([x - 48 * s, y - 64 * s, x + 48 * s, y + 6 * s], 180, 360, fill=st["hat_col"], outline=INK, width=4)
+        d.rounded_rectangle([x - 70 * s, y - 50 * s, x - 30 * s, y - 38 * s], 4, fill=shade(st["hat_col"], 0.7), outline=INK, width=3)
+    else:
+        d.chord([x - 50 * s, y - 70 * s, x + 50 * s, y + 10 * s], 180, 360, fill=st["hair"], outline=INK, width=4)
+        d.rounded_rectangle([x - 56 * s, y - 30 * s, x - 30 * s, y + 60 * s], 10, fill=st["hair"])
+    if st.get("glow"):
+        for k in (-1, 1):
+            d.ellipse([x + (16 * k + 8 * look) * s - 11 * s, y - 10 * s, x + (16 * k + 8 * look) * s + 11 * s, y + 4 * s], fill=st["glow"], outline=INK, width=2)
+    else:
+        for k in (-1, 1):
+            d.ellipse([x + (16 * k + 8 * look) * s - 6 * s, y - 10 * s, x + (16 * k + 8 * look) * s + 6 * s, y + 4 * s], fill=INK)
+    d.arc([x - 14 * s + 6 * look, y + 8 * s, x + 18 * s + 6 * look, y + 28 * s], 20, 160, fill=INK, width=4)
+
+
+def sportscar(fr, x, y, s, col, t, roll, people=()):
+    """Supercar originale vue de profil (aucun logo de marque)."""
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(lay).ellipse([x - 470 * s, y - 20 * s, x + 470 * s, y + 40 * s], fill=(0, 0, 0, 120))
+    fr.alpha_composite(lay.filter(ImageFilter.GaussianBlur(14)))
+    # faisceau des phares
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(lay).polygon([(x + 440 * s, y - 95 * s), (W + 400, y - 260 * s), (W + 400, y + 80 * s)], fill=(255, 250, 210, 70))
+    fr.alpha_composite(lay.filter(ImageFilter.GaussianBlur(18)))
+    d = ImageDraw.Draw(fr)
+    def Q(px, py):
+        return (x + px * s, y + py * s)
+    hi, dk = shade(col, 1.3), shade(col, 0.62)
+    body = [Q(470, -40), Q(462, -82), Q(400, -108), Q(240, -132), Q(140, -150), Q(40, -205), Q(-60, -222), Q(-170, -210),
+            Q(-280, -160), Q(-400, -142), Q(-470, -120), Q(-478, -60), Q(-462, -18), Q(-380, -14), Q(-372, -70), Q(-300, -118),
+            Q(-210, -118), Q(-150, -60), Q(-150, -14), Q(170, -14), Q(176, -66), Q(250, -118), Q(340, -118), Q(400, -60), Q(404, -16), Q(470, -16)]
+    d.polygon(body, fill=col, outline=INK)
+    d.line(body + [body[0]], fill=INK, width=max(4, int(8 * s)))
+    d.polygon([Q(-150, -60), Q(170, -66), Q(176, -40), Q(-150, -30)], fill=dk)                                  # bas de caisse
+    d.line([Q(420, -96), Q(240, -124), Q(140, -140), Q(-170, -150), Q(-380, -134)], fill=hi, width=max(3, int(10 * s)))  # reflet d'epaule
+    # vitres
+    win = [Q(130, -146), Q(36, -198), Q(-60, -214), Q(-165, -204), Q(-240, -158)]
+    d.polygon(win, fill=(26, 30, 48), outline=INK)
+    for i, (st, hx_) in enumerate(people):
+        head_in_car(d, x + hx_ * s, y - 160 * s, st, 0.95 * s, look=1)
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(lay)
+    ld.polygon(win, fill=(120, 160, 230, 70))
+    ld.line([Q(80, -160), Q(10, -200)], fill=(255, 255, 255, 170), width=max(3, int(8 * s)))
+    ld.line([Q(-110, -170), Q(-150, -200)], fill=(255, 255, 255, 120), width=max(2, int(5 * s)))
+    fr.alpha_composite(lay)
+    d = ImageDraw.Draw(fr)
+    d.line([Q(-60, -214), Q(-70, -132)], fill=INK, width=max(3, int(9 * s)))                                        # montant
+    d.line([Q(-70, -132), Q(-80, -40)], fill=shade(col, 0.5), width=4)                                                 # portiere
+    d.polygon([Q(-250, -110), Q(-150, -110), Q(-160, -66), Q(-240, -72)], fill=(20, 20, 26), outline=INK)            # prise d'air
+    for k in range(3):
+        d.line([Q(-240 + k * 30, -104), Q(-246 + k * 30, -74)], fill=(70, 70, 84), width=3)
+    d.polygon([Q(150, -150), Q(186, -150), Q(196, -132), Q(156, -130)], fill=col, outline=INK)                         # retro
+    d.polygon([Q(-400, -142), Q(-470, -160), Q(-480, -146), Q(-410, -130)], fill=dk, outline=INK)                     # aileron
+    d.line([Q(-440, -150), Q(-430, -128)], fill=INK, width=5)
+    d.polygon([Q(440, -96), Q(466, -82), Q(452, -66), Q(400, -78)], fill=(255, 250, 220), outline=INK)               # phare
+    glow(fr, x + 450 * s, y - 84 * s, 40 * s, (255, 250, 210), 160)
+    d = ImageDraw.Draw(fr)
+    d.rectangle([Q(-476, -100), Q(-462, -74)], fill=(255, 40, 60), outline=INK, width=3)                              # feu arriere
+    glow(fr, x - 470 * s, y - 88 * s, 34 * s, (255, 40, 60), 150)
+    d = ImageDraw.Draw(fr)
+    for ex in (-440, -412):  # echappements
+        d.ellipse([Q(ex - 12, -34), Q(ex + 12, -18)], fill=(60, 62, 72), outline=INK, width=3)
+    for wx in (-300, 290):
+        rim(d, x + wx * s, y - 40 * s, 92 * s, roll)
+
+
+def A17(c):  # la voiture de sport rouge, 2 places, le pote reste sur le trottoir
+    lt = c["lt"]
+    go = ease((lt - 0.9) / 1.2)
+    cx = 640 + 900 * go
+    def back(fr, c):
+        d = ImageDraw.Draw(fr)
+        if go > 0:
+            for i in range(7):  # traits de vitesse
+                y = c["gy"] - 120 - i * 55
+                d.line([cx - 520 - i * 30, y, cx - 470 - 260 * go, y], fill=(255, 255, 255), width=5)
+            for i in range(5):  # fumee d'echappement
+                ph = (lt * 2 + i / 5) % 1
+                r = 20 + 50 * ph
+                ex, ey = cx - 0.95 * 430 - 140 * ph, c["gy"] - 40 - 30 * ph
+                d.ellipse([ex - r, ey - r, ex + r, ey + r], fill=(200, 200, 215), outline=INK, width=3)
+        sportscar(fr, cx, c["gy"] - 40, 0.95, (215, 25, 35), c["t"], c["t"] * (2 + 25 * go),
+                  people=((L.GIRL, -120), (C.ACTIVE[0], 40)))
+        d = ImageDraw.Draw(fr)
+        if go < 0.4:
+            d.rounded_rectangle([cx - 90, c["gy"] - 470, cx + 90, c["gy"] - 400], 16, fill=(255, 255, 255), outline=INK, width=5)
+            d.text((cx, c["gy"] - 435), "2 PLACES", font=font(40), fill=(215, 25, 35), anchor="mm")
+    def pal(t, talk):
+        p = default_pose(t, 0, 1)
+        p.update(rh=(170 + 40 * math.sin(t * 10), -720), rh_shape="open", brows="sad", mouth="o", look=(1, 0))
+        return p
+    return dict(hero=None, extras=[dict(x=85, style=PAL, posefn=pal, s=0.64, gy_off=70)], back=back)
+
+
+def scissors(fr, Cp, s, t, closed):
+    d = ImageDraw.Draw(fr)
+    x, y = Cp
+    op = math.radians(26 * (1 - closed))
+    for k in (-1, 1):
+        a = -0.15 + k * op
+        tip = (x + 260 * s * math.cos(a), y + 260 * s * math.sin(a))
+        d.polygon([(x, y - 8 * s), tip, (x, y + 8 * s)], fill=(210, 216, 232), outline=INK)
+        d.line([(x + 20 * s * math.cos(a), y + 20 * s * math.sin(a)), tip], fill=(255, 255, 255), width=3)
+        hx_, hy_ = x - 60 * s * math.cos(a + k * 0.6), y - 60 * s * math.sin(a + k * 0.6)
+        d.ellipse([hx_ - 34 * s, hy_ - 26 * s, hx_ + 34 * s, hy_ + 26 * s], outline=INK, width=int(18 * s))
+        d.ellipse([hx_ - 34 * s, hy_ - 26 * s, hx_ + 34 * s, hy_ + 26 * s], outline=(255, 80, 110), width=int(11 * s))
+    d.ellipse([x - 10 * s, y - 10 * s, x + 10 * s, y + 10 * s], fill=ACC, outline=INK, width=3)
+
+
+def plank(d, x, y, ang, w=44, h=16, col=(170, 110, 60)):
+    ca, sa = math.cos(ang), math.sin(ang)
+    pts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)]
+    P_ = [(x + px * ca - py * sa, y + px * sa + py * ca) for px, py in pts]
+    d.polygon(P_, fill=col, outline=INK)
+    d.line([P_[0], P_[1]], fill=shade(col, 1.25), width=3)
+
+
+def A22(c):  # il coupe le pont de corde
+    lt = c["lt"]
+    cut = 0.55
+    AL, AR, Y0 = (300, 1236), (780, 1236), 1236
+    N = 18
+    def chain_points(side, k):
+        """Points d'une moitie de pont qui pivote vers le bas autour de son ancrage."""
+        ax, ay = AL if side == 0 else AR
+        dirx = 1 if side == 0 else -1
+        pts = []
+        L_ = 240
+        for i in range(N // 2 + 1):
+            u = i / (N // 2)
+            a = math.radians(8 + 82 * k) * (1 + 0.15 * u * k)
+            pts.append((ax + dirx * L_ * u * math.cos(a), ay + L_ * u * math.sin(a) + 30 * u * (1 - k)))
+        return pts
+    def back(fr, c):
+        d = ImageDraw.Draw(fr)
+        # decor plus riche : plateaux lointains, riviere, oiseaux
+        for mx, mw, mh in ((180, 260, 220), (560, 300, 260), (900, 240, 200)):
+            d.polygon([(mx - mw / 2, 1240), (mx - mw / 2 + 40, 1240 - mh), (mx + mw / 2 - 40, 1240 - mh), (mx + mw / 2, 1240)], fill=(110, 60, 90))
+        d.rectangle([300, 1240, 780, 1300], fill=(70, 34, 60))
+        rv = [(330 + 40 * math.sin(y / 60 + c["t"] * 2), y) for y in range(1500, H, 20)]
+        d.polygon([(rx, ry) for rx, ry in rv] + [(rx + 380, ry) for rx, ry in rv[::-1]], fill=(40, 120, 190))
+        for y in range(1520, H, 60):
+            d.line([420 + 30 * math.sin(y + c["t"] * 4), y, 500 + 30 * math.sin(y + c["t"] * 4), y], fill=(160, 220, 255), width=4)
+        for i in range(4):
+            bx, by = (c["t"] * 60 + i * 260) % (W + 200) - 100, 560 + i * 40
+            d.arc([bx, by, bx + 40, by + 26], 200, 340, fill=INK, width=5)
+            d.arc([bx + 36, by, bx + 76, by + 26], 200, 340, fill=INK, width=5)
+        # poteaux
+        for (px, py) in (AL, AR):
+            d.rectangle([px - 16, py - 130, px + 16, py + 10], fill=(110, 70, 40), outline=INK, width=5)
+            d.ellipse([px - 22, py - 146, px + 22, py - 120], fill=(130, 84, 48), outline=INK, width=4)
+        if lt < cut:
+            deck = [(AL[0] + (AR[0] - AL[0]) * i / N, Y0 + 70 * math.sin(math.pi * i / N)) for i in range(N + 1)]
+            rail = [(x_, y_ - 110 + 20 * math.sin(math.pi * i / N)) for i, (x_, y_) in enumerate(deck)]
+            for (x1, y1), (x2, y2) in zip(rail, deck):
+                d.line([x1, y1, x2, y2], fill=(150, 110, 70), width=3)
+            d.line(rail, fill=(150, 100, 60), width=7)
+            d.line(deck, fill=(120, 80, 46), width=6)
+            for i in range(N):
+                x_, y_ = (deck[i][0] + deck[i + 1][0]) / 2, (deck[i][1] + deck[i + 1][1]) / 2
+                ang = math.atan2(deck[i + 1][1] - deck[i][1], deck[i + 1][0] - deck[i][0])
+                plank(d, x_, y_, ang, col=(170, 110, 60) if i % 2 else (150, 96, 52))
+            d.line([AL[0], AL[1] - 130, rail[0][0], rail[0][1]], fill=(150, 100, 60), width=7)
+            d.line([AR[0], AR[1] - 130, rail[-1][0], rail[-1][1]], fill=(150, 100, 60), width=7)
+        else:
+            k = ease((lt - cut) / 0.6)
+            for side in (0, 1):
+                pts = chain_points(side, k)
+                d.line(pts, fill=(120, 80, 46), width=6)
+                for i in range(len(pts) - 1):
+                    if i % 3 == 2 and lt - cut > 0.15 * (i // 3):   # quelques planches se detachent
+                        continue
+                    x_, y_ = (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2
+                    ang = math.atan2(pts[i + 1][1] - pts[i][1], pts[i + 1][0] - pts[i][0])
+                    plank(d, x_, y_, ang)
+            # planches qui tombent dans le vide
+            rnd = random.Random(4)
+            for j in range(8):
+                t0 = cut + 0.08 * j
+                if lt < t0:
+                    continue
+                tt = lt - t0
+                fx = 420 + rnd.randint(-80, 160) + 40 * tt
+                fy = 1260 + 1400 * tt * tt
+                if fy < H + 40:
+                    plank(d, fx, fy, tt * (6 if j % 2 else -5) + j)
+            if lt - cut < 0.25:
+                burst(d, AL[0] + 20, AL[1] - 120, 1.3, (255, 255, 255))
+    def hero(t, talk):
+        p = default_pose(t, talk)
+        closed = ease((lt - cut + 0.15) / 0.15)
+        p.update(rh=(160, -480), rh_shape="fist", rh_prop=lambda fr, Cp, s, t: scissors(fr, Cp, s, t, closed),
+                 brows="angry", mouth="smirk", shades=1, look=(1, 0))
+        return p
+    def fake(kind):
+        def f(t, talk):
+            p = default_pose(t, 0, kind)
+            p.update(lh=(-200, -700), rh=(200, -700), lh_shape="open", rh_shape="open", mouth="o", brows="up", look=(-1, 0.5))
+            return p
+        return f
+    extras = [dict(x=880, style=RIVAL, posefn=fake(1), s=0.62), dict(x=1010, seed=61, posefn=fake(2), s=0.6)]
+    return dict(hero=hero, hx=150, hero_s=0.82, extras=extras, back=back)
+
+
 C.ACTIONS.update({f"p{i}": f for i, f in enumerate([A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22], 1)})
 
 if __name__ == "__main__":
