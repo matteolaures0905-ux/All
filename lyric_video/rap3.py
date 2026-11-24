@@ -374,15 +374,47 @@ def P(**kw):
     return f
 
 
-def A1(c):  # le sac de cartouches + le fusil a pompe sur le capot
+def sprite(fn, size, *args):
+    """Dessine fn(d, cx, cy, *args) sur un calque transparent centre."""
+    im = Image.new("RGBA", size, (0, 0, 0, 0))
+    fn(ImageDraw.Draw(im), size[0] // 2, size[1] // 2, *args)
+    return im
+
+
+_gun = {}
+def prop_shotgun(fr, Cp, s, t):
+    """Fusil a pompe tenu en travers de la poitrine, canon vers le ciel."""
+    key = round(s, 2)
+    if key not in _gun:
+        sc = 0.7 * s
+        im = Image.new("RGBA", (1400, 1400), (0, 0, 0, 0))
+        pump_gun(ImageDraw.Draw(im), 700 + 160 * sc, 700 - 30 * sc, sc)  # la poignee tombe au centre du calque
+        _gun[key] = im.rotate(58, resample=Image.BICUBIC)
+    g = _gun[key]
+    fr.alpha_composite(g, (int(Cp[0] - g.width / 2), int(Cp[1] - g.height / 2)))
+
+
+_bag = {}
+def prop_bag(fr, Cp, s, t):
+    """Sac de cartouches qui pend a la main."""
+    key = round(s, 2)
+    if key not in _bag:
+        im = Image.new("RGBA", (760, 600), (0, 0, 0, 0))
+        open_bag(ImageDraw.Draw(im), 380, 360, 0)
+        _bag[key] = im.resize((int(760 * 0.62 * s), int(600 * 0.62 * s)), Image.LANCZOS)
+    b = _bag[key]
+    sway = 4 * math.sin(t * 3)
+    fr.alpha_composite(b, (int(Cp[0] - b.width / 2 + sway), int(Cp[1] - 40 * s)))
+
+
+def A1(c):  # le heros tient le fusil a pompe et le sac de cartouches
     lt = c["lt"]
     def back(fr, c):
-        L.supercar(fr, 620, c["gy"] - 320, 0.95, col=(40, 120, 200))
-        glow(fr, 700, c["gy"] - 640, 150, ACC, int(60 + 100 * C.VOC[0]))
-        d = ImageDraw.Draw(fr)
-        open_bag(d, 760, c["gy"] - 610, c["t"])
-        pump_gun(d, 600, c["gy"] - 455, 0.78)
-    return dict(hero=P(lh=(70, -430), rh=(-70, -415), look=(1, 0.5), brows="angry", mouth="flat", shades=0), hx=200, back=back)
+        L.supercar(fr, 700, c["gy"] - 320, 0.95, col=(40, 120, 200))
+        glow(fr, 380, c["gy"] - 620, 200, ACC, int(50 + 90 * C.VOC[0]))
+    hero = P(rh=(110, -470), rh_shape="fist", rh_prop=prop_shotgun, lh=(-200, -300), lh_shape="fist", lh_prop=prop_bag,
+             look=(0, 0), brows="angry", mouth="flat", shades=0)
+    return dict(hero=hero, hx=380, back=back)
 
 
 def A2(c):  # sirenes : c'est le rival qui cavale, le heros reste calme

@@ -4,7 +4,8 @@
   "end": 2.35,
   "scene": "street",
   "action": "p1",
-  "text": "un sac bien *LOURD*"
+  "text": "un sac bien *LOURD*",
+  "sticker": "CLIC CLAC"
  },
  {
   "start": 2.4,
@@ -25,42 +26,48 @@
   "end": 7.45,
   "scene": "alley",
   "action": "p4",
-  "text": "les chiffres *CHUTENT*"
+  "text": "les chiffres *CHUTENT*",
+  "sticker": "GRRR"
  },
  {
   "start": 7.5,
   "end": 9.35,
   "scene": "alley",
   "action": "p5",
-  "text": "rien dans les *POCHES*"
+  "text": "rien dans les *POCHES*",
+  "sticker": "VIDE !"
  },
  {
   "start": 9.4,
   "end": 11.35,
   "scene": "park",
   "action": "p6",
-  "text": "il fait le *BEAU*"
+  "text": "il fait le *BEAU*",
+  "sticker": "PFF..."
  },
  {
   "start": 11.4,
   "end": 13.35,
   "scene": "club",
   "action": "p7",
-  "text": "le club ? *NON*"
+  "text": "le club ? *NON*",
+  "sticker": "NOPE"
  },
  {
   "start": 13.4,
   "end": 15.35,
   "scene": "club",
   "action": "p8",
-  "text": "un chèque *XXL*"
+  "text": "un chèque *XXL*",
+  "sticker": "$$$"
  },
  {
   "start": 15.4,
   "end": 16.85,
   "scene": "stage",
   "action": "p9",
-  "text": "boîte *MYSTÈRE*"
+  "text": "boîte *MYSTÈRE*",
+  "sticker": "NEW !"
  },
  {
   "start": 16.9,
@@ -81,7 +88,8 @@
   "end": 22.35,
   "scene": "room",
   "action": "p12",
-  "text": "le distributeur affiche *ZÉRO*"
+  "text": "le distributeur affiche *ZÉRO*",
+  "sticker": "OUPS"
  },
  {
   "start": 22.4,
@@ -95,35 +103,40 @@
   "end": 25.35,
   "scene": "roof",
   "action": "p14",
-  "text": "cap sur le *SOLEIL*"
+  "text": "cap sur le *SOLEIL*",
+  "sticker": "BYE !"
  },
  {
   "start": 25.4,
   "end": 27.35,
   "scene": "beach",
   "action": "p15",
-  "text": "le ciel *EXPLOSE*"
+  "text": "le ciel *EXPLOSE*",
+  "sticker": "BOOM"
  },
  {
   "start": 27.4,
   "end": 29.85,
   "scene": "beach",
   "action": "p16",
-  "text": "le sable et les *TOURS*"
+  "text": "le sable et les *TOURS*",
+  "sticker": "WOW"
  },
  {
   "start": 29.9,
   "end": 32.35,
   "scene": "street",
   "action": "p17",
-  "text": "le pote reste *À QUAI*"
+  "text": "le pote reste *À QUAI*",
+  "sticker": "VROUM"
  },
  {
   "start": 32.4,
   "end": 33.35,
   "scene": "roof",
   "action": "p18",
-  "text": "clin *D'ŒIL*"
+  "text": "clin *D'ŒIL*",
+  "sticker": ";)"
  },
  {
   "start": 33.4,
@@ -137,20 +150,23 @@
   "end": 39.25,
   "scene": "pitch",
   "action": "p20",
-  "text": "la coupe est *À NOUS*"
+  "text": "la coupe est *À NOUS*",
+  "sticker": "WIN !"
  },
  {
   "start": 39.3,
   "end": 42.35,
   "scene": "alley",
   "action": "p21",
-  "text": "les masques *TOMBENT*"
+  "text": "les masques *TOMBENT*",
+  "sticker": "FAKE"
  },
  {
   "start": 42.4,
   "end": 43.8,
   "scene": "canyon",
   "action": "p22",
-  "text": "le pont *CÈDE*"
+  "text": "le pont *CÈDE*",
+  "sticker": "CRAC"
  }
 ]

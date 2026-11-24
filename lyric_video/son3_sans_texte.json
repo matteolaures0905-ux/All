@@ -4,7 +4,8 @@
   "end": 2.35,
   "scene": "street",
   "action": "p1",
-  "text": ""
+  "text": "",
+  "sticker": "CLIC CLAC"
  },
  {
   "start": 2.4,
@@ -25,42 +26,48 @@
   "end": 7.45,
   "scene": "alley",
   "action": "p4",
-  "text": ""
+  "text": "",
+  "sticker": "GRRR"
  },
  {
   "start": 7.5,
   "end": 9.35,
   "scene": "alley",
   "action": "p5",
-  "text": ""
+  "text": "",
+  "sticker": "VIDE !"
  },
  {
   "start": 9.4,
   "end": 11.35,
   "scene": "park",
   "action": "p6",
-  "text": ""
+  "text": "",
+  "sticker": "PFF..."
  },
  {
   "start": 11.4,
   "end": 13.35,
   "scene": "club",
   "action": "p7",
-  "text": ""
+  "text": "",
+  "sticker": "NOPE"
  },
  {
   "start": 13.4,
   "end": 15.35,
   "scene": "club",
   "action": "p8",
-  "text": ""
+  "text": "",
+  "sticker": "$$$"
  },
  {
   "start": 15.4,
   "end": 16.85,
   "scene": "stage",
   "action": "p9",
-  "text": ""
+  "text": "",
+  "sticker": "NEW !"
  },
  {
   "start": 16.9,
@@ -81,7 +88,8 @@
   "end": 22.35,
   "scene": "room",
   "action": "p12",
-  "text": ""
+  "text": "",
+  "sticker": "OUPS"
  },
  {
   "start": 22.4,
@@ -95,35 +103,40 @@
   "end": 25.35,
   "scene": "roof",
   "action": "p14",
-  "text": ""
+  "text": "",
+  "sticker": "BYE !"
  },
  {
   "start": 25.4,
   "end": 27.35,
   "scene": "beach",
   "action": "p15",
-  "text": ""
+  "text": "",
+  "sticker": "BOOM"
  },
  {
   "start": 27.4,
   "end": 29.85,
   "scene": "beach",
   "action": "p16",
-  "text": ""
+  "text": "",
+  "sticker": "WOW"
  },
  {
   "start": 29.9,
   "end": 32.35,
   "scene": "street",
   "action": "p17",
-  "text": ""
+  "text": "",
+  "sticker": "VROUM"
  },
  {
   "start": 32.4,
   "end": 33.35,
   "scene": "roof",
   "action": "p18",
-  "text": ""
+  "text": "",
+  "sticker": ";)"
  },
  {
   "start": 33.4,
@@ -137,20 +150,23 @@
   "end": 39.25,
   "scene": "pitch",
   "action": "p20",
-  "text": ""
+  "text": "",
+  "sticker": "WIN !"
  },
  {
   "start": 39.3,
   "end": 42.35,
   "scene": "alley",
   "action": "p21",
-  "text": ""
+  "text": "",
+  "sticker": "FAKE"
  },
  {
   "start": 42.4,
   "end": 43.8,
   "scene": "canyon",
   "action": "p22",
-  "text": ""
+  "text": "",
+  "sticker": "CRAC"
  }
 ]

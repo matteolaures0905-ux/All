@@ -862,6 +862,64 @@ def vocal_features(path, start, dur, fps):
     return env, flash, onsets
 
 
+STICKER_COLS = [(255, 70, 110), (60, 200, 255), (255, 200, 40), (150, 110, 255), (90, 230, 140)]
+
+
+def draw_sticker(fr, txt, lt, li):
+    """Sticker facon BD (etoile a pointes + texte) qui saute et se balance doucement."""
+    k = eob((lt - 0.45) / 0.3)
+    if k < 0.05:
+        return
+    col = STICKER_COLS[li % len(STICKER_COLS)]
+    f = font(64)
+    tw = f.getlength(txt)
+    R = max(110, tw / 2 + 50)
+    im = Image.new("RGBA", (int(R * 2.6), int(R * 2.2)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    cx, cy = im.width / 2, im.height / 2
+    pts = []
+    for i in range(24):
+        r = (R if i % 2 == 0 else R * 0.72)
+        a = i * math.tau / 24
+        pts.append((cx + r * 1.15 * math.cos(a), cy + r * 0.8 * math.sin(a)))
+    d.polygon([(x + 8, y + 10) for x, y in pts], fill=(0, 0, 0, 120))
+    d.polygon(pts, fill=col + (255,), outline=INK + (255,))
+    d.line(pts + [pts[0]], fill=INK + (255,), width=7)
+    d.text((cx, cy), txt, font=f, fill=(255, 255, 255), anchor="mm", stroke_width=7, stroke_fill=INK)
+    im = im.resize((max(1, int(im.width * 0.85 * k)), max(1, int(im.height * 0.85 * k)))).rotate(8 * math.sin(lt * 3) + (-8 if li % 2 else 8), expand=True, resample=Image.BICUBIC)
+    x = 800 if li % 2 == 0 else 280
+    fr.alpha_composite(im, (int(x - im.width / 2), int(640 - im.height / 2)))
+
+
+def draw_retention(fr, t, dur, lt, li, hook, cta):
+    d = ImageDraw.Draw(fr)
+    # transition : balayage colore en diagonale au debut de chaque scene (pas de flash)
+    if li > 0 and lt < 0.22:
+        k = lt / 0.22
+        col = STICKER_COLS[li % len(STICKER_COLS)]
+        x0 = -W * 0.6 + k * W * 2.2
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).polygon([(x0 - 260, 0), (x0 + 120, 0), (x0 - 300, H), (x0 - 680, H)], fill=col + (235,))
+        fr.alpha_composite(lay)
+        d = ImageDraw.Draw(fr)
+    # barre de progression
+    d.rounded_rectangle([40, H - 70, W - 40, H - 56], 7, fill=(255, 255, 255, 60), outline=None)
+    d.rounded_rectangle([40, H - 70, 40 + (W - 80) * clamp(t / dur), H - 56], 7, fill=ACC)
+    d.ellipse([40 + (W - 80) * clamp(t / dur) - 14, H - 77, 40 + (W - 80) * clamp(t / dur) + 14, H - 49], fill=(255, 255, 255), outline=INK, width=3)
+    # accroche du debut
+    def pill(txt, y, k, col):
+        if k < 0.05:
+            return
+        f = font(int(58 * k) + 1)
+        tw = f.getlength(txt)
+        d.rounded_rectangle([W / 2 - tw / 2 - 40, y - 52 * k, W / 2 + tw / 2 + 40, y + 52 * k], int(50 * k), fill=col, outline=INK, width=6)
+        d.text((W / 2, y), txt, font=f, fill=(255, 255, 255), anchor="mm", stroke_width=5, stroke_fill=INK)
+    if hook and t < 2.6:
+        pill(hook, H - 200, eob(t / 0.3) * (1 - ease((t - 2.3) / 0.3)) * (1 + 0.03 * math.sin(t * 6)), (230, 40, 70))
+    if cta and t > dur - 2.2:
+        pill(cta, H - 200, eob((t - dur + 2.2) / 0.3) * (1 + 0.03 * math.sin(t * 6)), (40, 120, 230))
+
+
 def default_pose(t, talk, phase=0):
     g = clamp(talk - 0.25) * 1.4
     return dict(lh=(-170, -300 + 8 * math.sin(t * 5 + phase)), rh=(175 + 20 * g, -300 - 210 * g),
@@ -1511,6 +1569,8 @@ def main():
     ap.add_argument("--stills", help="liste de temps -> planche PNG")
     ap.add_argument("--hero", default="classic", choices=["classic", "dark"])
     ap.add_argument("--night", action="store_true", help="etalonnage nocturne des decors")
+    ap.add_argument("--hook", default="", help="texte d'accroche des premieres secondes")
+    ap.add_argument("--cta", default="", help="appel a l'action de fin")
     a = ap.parse_args()
     fps, dur = a.fps, a.duration
     ACTIVE[0] = HERO_DARK if a.hero == "dark" else HERO
@@ -1520,6 +1580,7 @@ def main():
     for i, l in enumerate(lines):
         l["scene"] = raw[i].get("scene", "street")
         l["action"] = raw[i].get("action")
+        l["sticker"] = raw[i].get("sticker")
         l["seed"] = i
     rms, pulse = audio_energy(a.audio, a.start, dur, fps) if a.audio else bpm_energy(a.bpm, dur, fps)
     talk_env = np.convolve(rms, np.ones(3) / 3, "same")
@@ -1620,7 +1681,12 @@ def main():
         cw, ch = int(W / z), int(H / z)
         ox = (W - cw) // 2
         oy = int((H - ch) * 0.6)
+        drift = int(((lt / max(0.5, c["dur"])) * 2 - 1) * min(14, (W - cw) // 2 - 1) * (1 if li % 2 else -1))
+        ox = max(0, min(W - cw, ox + drift))  # travelling lateral lent
         frame = frame.crop((ox, oy, ox + cw, oy + ch)).resize((W, H), Image.BILINEAR)
+        if line.get("sticker"):
+            draw_sticker(frame, line["sticker"], lt, li)
+        draw_retention(frame, t, dur, lt, li, a.hook, a.cta)
         for l in lines:
             if l["start"] - 0.25 <= t < l["end"] and any(w["text"] for w in l["words"]):
                 draw_lyrics(frame, l, t, p)
