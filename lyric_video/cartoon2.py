@@ -893,19 +893,6 @@ def draw_sticker(fr, txt, lt, li):
 
 def draw_retention(fr, t, dur, lt, li, hook, cta):
     d = ImageDraw.Draw(fr)
-    # transition : balayage colore en diagonale au debut de chaque scene (pas de flash)
-    if li > 0 and lt < 0.22:
-        k = lt / 0.22
-        col = STICKER_COLS[li % len(STICKER_COLS)]
-        x0 = -W * 0.6 + k * W * 2.2
-        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        ImageDraw.Draw(lay).polygon([(x0 - 260, 0), (x0 + 120, 0), (x0 - 300, H), (x0 - 680, H)], fill=col + (235,))
-        fr.alpha_composite(lay)
-        d = ImageDraw.Draw(fr)
-    # barre de progression
-    d.rounded_rectangle([40, H - 70, W - 40, H - 56], 7, fill=(255, 255, 255, 60), outline=None)
-    d.rounded_rectangle([40, H - 70, 40 + (W - 80) * clamp(t / dur), H - 56], 7, fill=ACC)
-    d.ellipse([40 + (W - 80) * clamp(t / dur) - 14, H - 77, 40 + (W - 80) * clamp(t / dur) + 14, H - 49], fill=(255, 255, 255), outline=INK, width=3)
     # accroche du debut
     def pill(txt, y, k, col):
         if k < 0.05:

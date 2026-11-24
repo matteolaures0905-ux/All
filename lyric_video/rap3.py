@@ -437,19 +437,106 @@ def A2(c):  # sirenes : c'est le rival qui cavale, le heros reste calme
                 extras=[dict(x=rx, style=RIVAL, posefn=rival, s=0.86)], back=back, front=front)
 
 
-def A3(c):  # les comptes au stylo
+ROWS = [("LOYER", "1 200"), ("STOCK", "4 850"), ("SAPES", "2 250")]
+
+
+def A3(c):  # stylo noir et feuille de compte, en gros plan
     lt = c["lt"]
+    dy = c["gy"] - 200                     # plateau du bureau
+    px0, px1, py0 = 250, 830, dy - 262     # feuille
+    chars = int(max(0, lt - 0.1) * 26)    # le stylo ecrit en continu
+    # ou en est l'ecriture ?
+    done, row, col_txt = 0, 0, ""
+    for i, (lab, val) in enumerate(ROWS):
+        line_txt = lab + "   " + val
+        if chars - done <= len(line_txt):
+            row, col_txt = i, line_txt[:max(0, chars - done)]
+            break
+        done += len(line_txt)
+    else:
+        row, col_txt = len(ROWS), ""
+    f = font(26)
+    RS = 29
+    wy = py0 + 80 + row * RS
+    wx = px0 + 40 + f.getlength(col_txt) if row < len(ROWS) else px0 + 300
+    if row >= len(ROWS):
+        wy = py0 + 80 + len(ROWS) * RS + 6
+    hero_s = 1.12
     def hero(t, talk):
         p = default_pose(t, talk)
-        p.update(rh=(190 + 30 * math.sin(t * 12), -430), rh_shape="fist", look=(1, 1), brows="angry", mouth="flat" if talk < 0.25 else "talk")
+        tx, ty = (wx + 30 - 330) / (0.92 * hero_s), (wy - 60 - c["gy"]) / (0.92 * hero_s)
+        p.update(rh=(tx, ty), rh_shape="fist", lh=(-150, -300), look=(1, 1), brows="angry", mouth="flat" if talk < 0.25 else "talk")
         return p
-    def front(fr, c):
-        ledger(fr, c, lt)
+    def back(fr, c):
+        # lampe de bureau + cone de lumiere chaude qui suit la voix
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).polygon([(860, 820), (960, 820), (1000, dy + 20), (220, dy + 20)], fill=(255, 220, 150, int(60 + 70 * C.VOC[0])))
+        fr.alpha_composite(lay.filter(ImageFilter.GaussianBlur(16)))
         d = ImageDraw.Draw(fr)
-        x, y = c["hx"] + 0.92 * (190 + 30 * math.sin(c["t"] * 12)), c["gy"] - 0.92 * 430
-        d.line([x, y, x + 50, y + 90], fill=INK, width=14)
-        d.line([x + 40, y + 72, x + 52, y + 94], fill=(30, 30, 40), width=8)
-    return dict(hero=hero, hx=260, front=front)
+        d.line([1000, dy, 1000, 760], fill=INK, width=14); d.line([1000, dy, 1000, 760], fill=(60, 60, 70), width=8)
+        d.line([1000, 760, 920, 800], fill=INK, width=14); d.line([1000, 760, 920, 800], fill=(60, 60, 70), width=8)
+        d.polygon([(860, 830), (970, 790), (950, 740), (840, 790)], fill=(40, 110, 90), outline=INK)
+        d.ellipse([890, 800, 930, 830], fill=(255, 245, 200))
+    def front(fr, c):
+        d = ImageDraw.Draw(fr)
+        d.rounded_rectangle([20, dy, 1060, dy + 70], 14, fill=(120, 76, 46), outline=INK, width=LW)
+        d.line([40, dy + 18, 1040, dy + 18], fill=(150, 100, 64), width=6)
+        for lx in (70, 1010):
+            d.rectangle([lx - 18, dy + 70, lx + 18, c["gy"] + 60], fill=(90, 56, 34), outline=INK, width=5)
+        d.rounded_rectangle([960, dy - 90, 1040, dy - 5], 10, fill=(250, 250, 250), outline=INK, width=5)  # tasse
+        d.arc([1020, dy - 75, 1070, dy - 30], 270, 90, fill=INK, width=8)
+        for i in range(2):
+            ph = (c["t"] * 0.8 + i * 0.5) % 1
+            x = 990 + i * 22 + 10 * math.sin(c["t"] * 3 + i)
+            d.arc([x - 12, dy - 120 - 90 * ph, x + 12, dy - 90 - 90 * ph], 90, 270, fill=(230, 230, 240), width=5)
+        # feuille froissee
+        d.polygon([(60, dy - 40), (130, dy - 70), (200, dy - 35), (170, dy - 5), (80, dy - 8)], fill=(235, 230, 215), outline=INK)
+        d.line([(90, dy - 40), (150, dy - 30)], fill=(190, 185, 170), width=4)
+        # liasse de billets avec bande
+        for k in range(5):
+            d.rounded_rectangle([60, dy - 130 - k * 14, 230, dy - 108 - k * 14], 6, fill=(150, 210, 140), outline=INK, width=3)
+        d.rectangle([125, dy - 200, 165, dy - 106], fill=(230, 60, 70), outline=INK, width=3)
+        # la feuille de compte
+        d.polygon([(px0, py0), (px1, py0), (px1 + 20, dy - 4), (px0 - 20, dy - 4)], fill=(252, 249, 236), outline=INK)
+        d.line([(px0, py0), (px1, py0), (px1 + 20, dy - 4), (px0 - 20, dy - 4), (px0, py0)], fill=INK, width=5)
+        d.rectangle([px0 + 4, py0 + 4, px1 - 4, py0 + 44], fill=(60, 120, 200))
+        d.text((px0 + 40, py0 + 24), "ENTRÉES", font=font(28), fill=(255, 255, 255), anchor="lm")
+        d.text((px0 + 330, py0 + 24), "SORTIES", font=font(28), fill=(255, 255, 255), anchor="lm")
+        d.line([px0 + 310, py0 + 50, px0 + 316, dy - 6], fill=(230, 90, 90), width=3)
+        for i in range(7):
+            y = py0 + 66 + i * RS
+            d.line([px0 + 10, y + RS, px1 - 10, y + RS], fill=(180, 200, 230), width=2)
+        for i in range(min(row, len(ROWS))):  # lignes deja ecrites
+            lab, val = ROWS[i]
+            d.text((px0 + 40, py0 + 80 + i * RS), lab, font=f, fill=(20, 20, 40), anchor="lm")
+            d.text((px0 + 470, py0 + 80 + i * RS), val, font=f, fill=(20, 20, 40) if i != 1 else (200, 40, 50), anchor="rm")
+        if row < len(ROWS):  # ligne en cours, a l'encre fraiche
+            lab, val = ROWS[row]
+            d.text((px0 + 40, py0 + 80 + row * RS), col_txt, font=f, fill=(10, 10, 30), anchor="lm")
+        else:  # total souligne deux fois et entoure
+            yt = py0 + 80 + len(ROWS) * RS + 6
+            d.line([px0 + 260, yt - 22, px0 + 480, yt - 22], fill=INK, width=4)
+            d.text((px0 + 40, yt), "TOTAL", font=font(30), fill=(20, 20, 40), anchor="lm")
+            d.text((px0 + 470, yt), "8 300", font=font(30), fill=(200, 40, 50), anchor="rm")
+            d.ellipse([px0 + 340, yt - 24, px0 + 495, yt + 24], outline=(200, 40, 50), width=5)
+        # calculatrice dont l'ecran defile
+        cx0, cy0 = 860, dy - 235
+        d.rounded_rectangle([cx0, cy0, cx0 + 160, cy0 + 220], 16, fill=(50, 54, 66), outline=INK, width=6)
+        d.rectangle([cx0 + 16, cy0 + 16, cx0 + 144, cy0 + 60], fill=(170, 230, 170), outline=INK, width=3)
+        num = str(int(1000 + (c["t"] * 137) % 9000))
+        d.text((cx0 + 136, cy0 + 38), num, font=font(30), fill=(20, 50, 20), anchor="rm")
+        for r in range(4):
+            for cc in range(3):
+                kx, ky = cx0 + 22 + cc * 44, cy0 + 74 + r * 36
+                press = (int(c["t"] * 6) % 12) == r * 3 + cc
+                d.rounded_rectangle([kx, ky, kx + 34, ky + 26], 6, fill=(255, 176, 20) if press else (200, 204, 220), outline=INK, width=2)
+        # le stylo noir au bout de la main + trace d'encre
+        tipx, tipy = wx, wy + 12
+        d.line([tipx, tipy, tipx + 60, tipy - 110], fill=INK, width=20)
+        d.line([tipx + 2, tipy - 4, tipx + 58, tipy - 106], fill=(40, 40, 48), width=12)
+        d.line([tipx + 40, tipy - 74, tipx + 56, tipy - 102], fill=(210, 180, 80), width=5)   # agrafe doree
+        d.polygon([(tipx - 3, tipy + 6), (tipx + 9, tipy - 14), (tipx - 9, tipy - 8)], fill=(200, 190, 160), outline=INK)
+    return dict(hero=hero, hx=330, hero_s=hero_s, hero_gy=c["gy"] + 40, back=back, front=front)
 
 
 def A4(c):  # chiffres en baisse, rival enerve
