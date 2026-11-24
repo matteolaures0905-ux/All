@@ -1072,6 +1072,157 @@ def A22(c):  # il coupe le pont de corde
     return dict(hero=hero, hx=150, hero_s=0.82, extras=extras, back=back)
 
 
+
+# ====================================================================== v3 : voiture scene 1, villa, chateau
+def A1(c):  # le heros tient le fusil a pompe et le sac, devant la supercar bleue
+    lt = c["lt"]
+    def back(fr, c):
+        sportscar(fr, 720, c["gy"] - 150, 0.82, (30, 110, 220), c["t"], 0.0)
+        glow(fr, 380, c["gy"] - 620, 200, ACC, int(50 + 90 * C.VOC[0]))
+    hero = P(rh=(110, -470), rh_shape="fist", rh_prop=prop_shotgun, lh=(-200, -300), lh_shape="fist", lh_prop=prop_bag,
+             look=(0, 0), brows="angry", mouth="flat", shades=0)
+    return dict(hero=hero, hx=360, back=back)
+
+
+def lounger(d, x, y, s=1.0):
+    d.polygon([(x - 90 * s, y), (x + 60 * s, y), (x + 100 * s, y - 50 * s), (x + 80 * s, y - 56 * s), (x + 44 * s, y - 14 * s), (x - 90 * s, y - 14 * s)], fill=(250, 250, 250), outline=INK)
+    for lx in (-80, 50):
+        d.line([x + lx * s, y, x + lx * s, y + 26 * s], fill=INK, width=5)
+
+
+def villa2(fr, x, y, t):
+    """Villa moderne de luxe : volumes blancs, grandes baies vitrees eclairees, bois, piscine a debordement."""
+    d = ImageDraw.Draw(fr)
+    white, white_d, wood = (246, 244, 238), (214, 212, 206), (170, 112, 66)
+    warm = (255, 214, 140)
+    # palmiers de chaque cote
+    rnd = random.Random(3)
+    palm(d, x - 470, y + 40, 640, rnd, 1)
+    palm(d, x + 480, y + 40, 600, rnd, -1)
+    d = ImageDraw.Draw(fr)
+    # rez-de-chaussee
+    d.rectangle([x - 430, y - 300, x + 430, y], fill=white, outline=INK, width=LW)
+    for i, wx in enumerate(range(x - 400, x + 260, 165)):          # baies vitrees
+        d.rectangle([wx, y - 270, wx + 150, y - 10], fill=warm, outline=INK, width=5)
+        d.line([wx + 75, y - 270, wx + 75, y - 10], fill=(220, 170, 100), width=4)
+        if i % 2 == 0:  # plante d'interieur
+            d.polygon([(wx + 30, y - 10), (wx + 60, y - 10), (wx + 55, y - 50), (wx + 35, y - 50)], fill=(120, 80, 50))
+            for a in (-40, 0, 40):
+                r = math.radians(a - 90)
+                d.ellipse([wx + 45 + 40 * math.cos(r) - 14, y - 70 + 40 * math.sin(r) - 24, wx + 45 + 40 * math.cos(r) + 14, y - 70 + 40 * math.sin(r) + 24], fill=(60, 140, 80))
+    d.rectangle([x + 270, y - 300, x + 430, y], fill=wood, outline=INK, width=6)        # bardage bois
+    for k in range(1, 8):
+        d.line([x + 270 + k * 20, y - 296, x + 270 + k * 20, y - 4], fill=shade(wood, 0.8), width=3)
+    d.rectangle([x - 470, y - 330, x + 470, y - 300], fill=white_d, outline=INK, width=6)  # dalle debordante
+    # etage en porte-a-faux
+    d.rectangle([x - 300, y - 560, x + 330, y - 330], fill=white, outline=INK, width=LW)
+    for wx in range(x - 280, x + 300, 150):
+        d.rectangle([wx, y - 530, wx + 130, y - 350], fill=warm, outline=INK, width=5)
+    d.rectangle([x - 340, y - 590, x + 370, y - 560], fill=white_d, outline=INK, width=6)
+    # balcon vitre
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(lay).rectangle([x - 300, y - 400, x + 330, y - 330], fill=(180, 220, 255, 90), outline=INK + (255,), width=4)
+    fr.alpha_composite(lay)
+    d = ImageDraw.Draw(fr)
+    # spots encastres sous les dalles
+    for lx in range(x - 420, x + 440, 120):
+        glow(fr, lx, y - 290, 26, (255, 230, 170), 140)
+    d = ImageDraw.Draw(fr)
+    # terrasse + piscine a debordement eclairee
+    d.rectangle([x - 520, y, x + 520, y + 40], fill=(200, 170, 130), outline=INK, width=6)
+    pool = [x - 480, y + 40, x + 480, y + 150]
+    d.rectangle(pool, fill=(40, 190, 230), outline=INK, width=6)
+    glow(fr, x, y + 95, 220, (80, 230, 255), 90)
+    d = ImageDraw.Draw(fr)
+    for i in range(6):  # reflets ondulants
+        yy = y + 60 + i * 15
+        off = 30 * math.sin(t * 2 + i)
+        d.line([x - 400 + off + i * 40, yy, x - 250 + off + i * 40, yy], fill=(200, 245, 255), width=4)
+        d.line([x + 100 - off, yy, x + 240 - off, yy], fill=(200, 245, 255), width=4)
+    for i in range(10):  # reflets des baies dans l'eau
+        d.rectangle([x - 400 + i * 85, y + 44, x - 360 + i * 85, y + 70], fill=(255, 220, 150))
+    lounger(d, x - 330, y - 4, 0.9)
+    lounger(d, x - 170, y - 4, 0.9)
+    # guirlande
+    pts = [(x - 470 + i * 47, y - 600 + 30 * math.sin(i / 20 * math.pi)) for i in range(21)]
+    d.line(pts, fill=INK, width=3)
+    for i, (px, py) in enumerate(pts[::2]):
+        col = [(255, 210, 90), (255, 110, 170), (110, 230, 255)][i % 3]
+        d.ellipse([px - 7, py, px + 7, py + 16], fill=col, outline=INK, width=2)
+
+
+def A15(c):  # la villa et les feux d'artifice
+    lt = c["lt"]
+    def back(fr, c):
+        for i, (x, y, col) in enumerate(((180, 540, (255, 90, 160)), (760, 480, (90, 220, 255)), (480, 420, (255, 210, 80)), (920, 640, (180, 120, 255)))):
+            firework(fr, x, y, ((lt * 0.9) + i * 0.27) % 1.2, col)
+        villa2(fr, 540, c["gy"] - 330, c["t"])
+    return dict(hero=P(rh=(200, -740), rh_shape="open", lh=(-200, -740), lh_shape="open", shades=1, mouth="smile"),
+                hx=820, hero_s=0.72, hero_gy=c["gy"] + 10, back=back)
+
+
+def tower(d, x, y, w, h, roof, sand, t, flag_col):
+    d.rectangle([x - w / 2, y - h, x + w / 2, y], fill=sand, outline=INK, width=LW)
+    for r in range(int(h // 46)):                                  # pierres
+        yy = y - 30 - r * 46
+        off = 0 if r % 2 else w / 4
+        for bx in range(int(x - w / 2 + off), int(x + w / 2), int(w / 2)):
+            d.rectangle([bx + 4, yy - 20, bx + w / 2 - 6, yy + 16], outline=shade(sand, 0.85), width=3)
+    d.rectangle([x - w / 2 - 12, y - h - 20, x + w / 2 + 12, y - h], fill=shade(sand, 0.92), outline=INK, width=5)
+    d.polygon([(x - w / 2 - 22, y - h - 20), (x + w / 2 + 22, y - h - 20), (x, y - h - w * 1.4)], fill=roof, outline=INK)
+    d.line([(x - w / 2 - 10, y - h - 30), (x - 6, y - h - w * 1.3)], fill=shade(roof, 1.35), width=6)
+    fy = y - h - w * 1.4
+    d.line([x, fy, x, fy - 90], fill=INK, width=6)
+    wave = [(x + i * 12, fy - 90 + 10 * math.sin(t * 6 + i * 0.9)) for i in range(8)]
+    d.polygon([(x, fy - 90)] + wave + [(wave[-1][0], wave[-1][1] + 40)] + [(px, py + 40) for px, py in wave[::-1]], fill=flag_col, outline=INK)
+    d.rounded_rectangle([x - w * 0.18, y - h * 0.62, x + w * 0.18, y - h * 0.45], int(w * 0.18), fill=(255, 214, 120), outline=INK, width=4)
+
+
+def castle2(fr, x, y, t):
+    """Chateau de conte au bord de l'eau : pierre doree, tours a toits pointus, drapeaux qui flottent, fenetres eclairees."""
+    d = ImageDraw.Draw(fr)
+    sand = (232, 196, 136)
+    tower(d, x - 330, y, 140, 520, (60, 110, 220), sand, t, (255, 70, 100))
+    tower(d, x + 330, y, 140, 520, (60, 110, 220), sand, t + 1, (255, 200, 40))
+    # muraille + creneaux
+    d.rectangle([x - 260, y - 330, x + 260, y], fill=sand, outline=INK, width=LW)
+    for k in range(7):
+        d.rectangle([x - 260 + k * 76, y - 372, x - 220 + k * 76, y - 330], fill=sand, outline=INK, width=5)
+    for r in range(6):
+        yy = y - 30 - r * 50
+        off = 0 if r % 2 else 40
+        for bx in range(x - 250 + off, x + 250, 80):
+            d.rectangle([bx, yy - 22, bx + 70, yy + 18], outline=shade(sand, 0.85), width=3)
+    # donjon central
+    tower(d, x, y - 330, 220, 360, (220, 60, 80), sand, t + 2, (90, 220, 255))
+    # porte + herse
+    d.chord([x - 100, y - 230, x + 100, y + 30], 180, 360, fill=(90, 60, 40), outline=INK, width=6)
+    d.rectangle([x - 100, y - 100, x + 100, y], fill=(90, 60, 40))
+    for gx in range(x - 80, x + 90, 32):
+        d.line([gx, y - 200, gx, y], fill=(60, 60, 70), width=6)
+    for gy_ in range(int(y - 180), int(y), 40):
+        d.line([x - 95, gy_, x + 95, gy_], fill=(60, 60, 70), width=5)
+    for wx in (-190, 150):
+        d.rounded_rectangle([x + wx, y - 260, x + wx + 46, y - 180], 23, fill=(255, 214, 120), outline=INK, width=4)
+        glow(fr, x + wx + 23, y - 220, 40, (255, 210, 120), int(80 + 80 * C.VOC[0]))
+        d = ImageDraw.Draw(fr)
+    # lampions + vagues au pied
+    for lx in (x - 400, x + 400):
+        d.line([lx, y, lx, y - 160], fill=INK, width=8)
+        d.ellipse([lx - 22, y - 200, lx + 22, y - 156], fill=(255, 220, 140), outline=INK, width=4)
+        glow(fr, lx, y - 178, 50, (255, 220, 140), 120)
+        d = ImageDraw.Draw(fr)
+    for k in range(6):
+        wx = x - 520 + k * 210 + 30 * math.sin(t * 1.5 + k)
+        d.arc([wx, y + 20, wx + 200, y + 80], 0, 180, fill=(250, 250, 255), width=8)
+
+
+def A16(c):  # le chateau sur la plage
+    def back(fr, c):
+        castle2(fr, 640, c["gy"] - 230, c["t"])
+    return dict(hero=P(lh=(-90, -330), rh=(40, -700), rh_shape="point", shades=1, mouth="smile", look=(1, -1)), hx=190, hero_s=0.85, back=back)
+
+
 C.ACTIONS.update({f"p{i}": f for i, f in enumerate([A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22], 1)})
 
 if __name__ == "__main__":
